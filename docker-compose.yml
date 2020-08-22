@@ -7,7 +7,7 @@ services:
   api:
     build: ./api
     ports:
-      - "3030:3030"
+      - "8000:8000"
   db:
     image: elasticsearch:7.9.0
     expose:

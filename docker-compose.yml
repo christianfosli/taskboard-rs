@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  app:
+    build: ./app
+    ports:
+      - "80:80"
+  api:
+    build: ./api
+    ports:
+      - "3030:3030"
+  db:
+    image: elasticsearch:7.9.0
+    expose:
+      - "9200"
+      - "9300"

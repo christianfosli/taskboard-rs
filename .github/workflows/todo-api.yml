@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: login
-        run: docker login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}"
+        run: echo "${{ secrets.DOCKER_USERNAME }}" | docker login -u "${{ secrets.DOCKER_PASSWORD }}" --password-stdin
       - name: build
         run: docker build -t christianfosli/todo-api:latest .
       - name: push

@@ -1,7 +1,10 @@
+# syntax = docker/dockerfile:1-experimental
 FROM rust:1.45 as builder
 WORKDIR /usr/src/app
 COPY . .
-RUN cargo install --path .
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/src/app/target \
+    cargo install --path .
 
 FROM debian:buster-slim as final
 RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*

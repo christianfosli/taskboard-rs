@@ -1,27 +1,51 @@
+#![recursion_limit = "256"]
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
-struct Model {
+// models (should probably be moved into core)
+
+struct Project {
     link: ComponentLink<Self>,
-    value: i64,
+    id: String,
+    title: String,
 }
+
+struct Task {
+    link: ComponentLink<Self>,
+    title: String,
+    description: String,
+    status: Status,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Status {
+    Todo,
+    Doing,
+    Done,
+}
+
+// controller
 
 enum Msg {
-    AddOne,
+    AddTodo,
+    RemoveTodo,
 }
 
-impl Component for Model {
+// view
+
+impl Component for Project {
     type Message = Msg;
     type Properties = ();
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+        Self {
+            link,
+            id: String::from("tmp-id"),
+            title: String::from("tmp"),
+        }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::AddOne => self.value += 1,
-        }
-        true
+    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+        false
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -30,17 +54,60 @@ impl Component for Model {
 
     fn view(&self) -> Html {
         html! {
-            <div>
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <p>{ self.value }</p>
-            </div>
+            <main>
+                <h1>{ "Task Board" }</h1>
+                <ul>
+                    <Task:/>
+                    <Task:/>
+                </ul>
+            </main>
+        }
+    }
+}
+
+impl Component for Task {
+    type Message = Status;
+    type Properties = ();
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self {
+            link,
+            title: String::from("My todo"),
+            description: String::from(""),
+            status: Status::Todo,
+        }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let initialStatus = self.status;
+        match msg {
+            Status::Todo => self.status = Status::Todo,
+            Status::Doing => self.status = Status::Doing,
+            Status::Done => self.status = Status::Done,
+        }
+        self.status != initialStatus
+    }
+
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+        false
+    }
+
+    fn view(&self) -> Html {
+        html! {
+            <li class="todo">
+                <h3>{ &self.title }</h3>
+                <p class="status">{ format!("status: {:?}", self.status) }</p>
+                <button onclick=self.link.callback(|_| Status::Todo)>{ "Todo" }</button>
+                <button onclick=self.link.callback(|_| Status::Doing)>{ "Do" }</button>
+                <button onclick=self.link.callback(|_| Status::Done)>{ "Done" }</button>
+                <p>{ &self.description }</p>
+            </li>
         }
     }
 }
 
 #[wasm_bindgen(start)]
 pub fn run() {
-    App::<Model>::new().mount_to_body();
+    App::<Project>::new().mount_to_body();
 }
 
 #[cfg(test)]

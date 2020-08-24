@@ -19,13 +19,18 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DOCKER_BUILDKIT: 1
     steps:
       - uses: actions/checkout@v2
       - name: login
-        run: echo "${{ secrets.DOCKER_USERNAME }}" | docker login -u "${{ secrets.DOCKER_PASSWORD }}" --password-stdin
+        run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+        env:
+          USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       - name: build
-        run: docker build -t christianfosli/todo-app:latest .
+        run: docker build -t christianfosli/todo-app:"$GITHUB_SHA" christianfosli/todo-app:latest .
+        env:
+          DOCKER_BUILDKIT: 1
       - name: push
-        run: docker push christianfosli/todo-app:latest
+        run: |
+          docker push christianfosli/todo-app:"$GITHUB_SHA"
+          docker push christianfosli/todo-app:latest

@@ -28,7 +28,7 @@ jobs:
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       - name: build
         run: |
-          docker build -t christianfosli/todo-api:latest -t christianfosli/todo-api:"$GITHUB_SHA" .
+          docker build -t christianfosli/todo-api:"$GITHUB_SHA" -t christianfosli/todo-api:latest .
         env:
           DOCKER_BUILDKIT: 1
       - name: push

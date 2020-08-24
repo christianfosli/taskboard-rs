@@ -1,5 +1,8 @@
 # To-Do App
 
+![todo-app](https://github.com/christianfosli/todo-rs/workflows/todo-app/badge.svg)
+![todo-api](https://github.com/christianfosli/todo-rs/workflows/todo-api/badge.svg)
+
 A Kanban inspired to-do app for managing tasks and tracking progress.
 
 The purpose of this application is mostly for me to play with web development
@@ -12,12 +15,14 @@ I chose it simply to learn more about it.
 
 ### Prerequisites
 
-Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
-for docker and docker-compose, to reduce compile times:
+* Docker and preferably docker-compose
 
-```sh
-. enable_buildkit.sh
-```
+* Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
+  for docker and docker-compose, to reduce compile times:
+
+  ```sh
+  . enable_buildkit.sh
+  ```
 
 ### Run the code
 

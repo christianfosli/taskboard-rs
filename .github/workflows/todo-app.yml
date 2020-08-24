@@ -1,0 +1,36 @@
+name: todo-app
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - app/*
+      - .github/workflows/todo-app.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - app/*
+      - .github/workflows/todo-app.yml
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: login
+        run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+        env:
+          USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: build
+        run: docker build -t christianfosli/todo-app:"$GITHUB_SHA" -t christianfosli/todo-app:latest .
+        env:
+          DOCKER_BUILDKIT: 1
+      - name: push
+        run: |
+          docker push christianfosli/todo-app:"$GITHUB_SHA"
+          docker push christianfosli/todo-app:latest

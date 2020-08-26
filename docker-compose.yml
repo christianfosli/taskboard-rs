@@ -8,8 +8,18 @@ services:
     build: ./api
     ports:
       - "8000:8000"
-  db:
+  es:
     image: elasticsearch:7.9.0
     expose:
       - "9200"
       - "9300"
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+  kib:
+    image: kibana:7.9.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://es:9200
+      ELASTICSEARCH_HOSTS: http://es:9200

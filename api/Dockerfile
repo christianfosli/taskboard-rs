@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1-experimental
-FROM rust:1.45 as builder
+FROM rust:1.46 as builder
 WORKDIR /usr/src/app
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \

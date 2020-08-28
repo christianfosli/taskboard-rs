@@ -1,0 +1,52 @@
+name: taskboard-infra
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - infra/*
+      - .github/workflows/taskboard-infra.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - infra/*
+      - .github/workflows/taskboard-infra.yml
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  AZ_RESOURCE_GROUP: ${{ secrets.AZ_RESOURCE_GROUP }}
+  AZ_STORAGE_ACCOUNT: ${{ secrets.AZ_STORAGE_ACCOUNT }}
+  AZ_STORAGE_KEY: ${{ secrets.AZ_TF_STORAGE_KEY }}
+  AZ_STORAGE_CONTAINER: tfstate
+
+defaults:
+  run:
+    working-directory: infra/terraform
+
+jobs:
+  build-test-apply:
+    name: Build, test, apply if not a PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Init
+        run: |
+          terraform -v
+          terraform init --input=false \
+            --backend-config="resource_group_name=$AZ_RESOURCE_GROUP" \
+            --backend_config="storage_account_name=$AZ_STORAGE_ACCOUNT" \
+            --backend_config="access_key=$AZ_STORAGE_KEY" \
+            --backend_config="container_name=$AZ_STORAGE_CONTAINER"
+      - name: Plan
+        run: |
+          terraform plan --input=false --refresh=true --lock=false --out "release.tfplan"
+          terraform show --json release.tfplan > ../testplan.json
+      - name: Test
+        run: docker run --rm -v "$(pwd):/target" eerkunt/terraform-compliance \
+          -f test -t testplan.json
+        working-directory: infra
+      - name: Apply
+        run: terraform apply --input=false release.tfplan

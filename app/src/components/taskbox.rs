@@ -6,20 +6,6 @@ pub struct TaskBox {
     data: Task,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Task {
-    pub title: String,
-    pub status: Status,
-    pub remaining_work: Option<u8>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Status {
-    Todo,
-    Doing,
-    Done,
-}
-
 pub enum Msg {
     StatusChanged(Status),
 }

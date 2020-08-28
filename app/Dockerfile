@@ -9,3 +9,5 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM nginx as final
 COPY --from=builder /usr/src/app/static /usr/share/nginx/html
+COPY nginx-wasm-mime-type.conf /etc/nginx/conf.d/nginx-wasm-mime-type.conf
+EXPOSE 80

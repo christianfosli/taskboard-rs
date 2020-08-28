@@ -1,0 +1,40 @@
+name: taskboard-core-lib
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - core/*
+      - .github/workflows/taskboard-core-lib.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - core/*
+      - .github/workflows/taskboard-core-lib.yml
+
+defaults:
+  run:
+    working-directory: core
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo test
+  publish:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo package
+      - run: cargo publish --token $CRATES_IO_TOKEN
+        env:
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}

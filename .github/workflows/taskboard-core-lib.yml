@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   test:
-    runs_on: ubuntu_latest
+    runs-on: ubuntu_latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -28,7 +28,7 @@ jobs:
   publish:
     if: github.event_name == 'push'
     needs: test
-    runs_on: ubuntu_latest
+    runs-on: ubuntu_latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1

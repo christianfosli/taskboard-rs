@@ -1,16 +1,16 @@
-name: todo-app
+name: taskboard-app
 
 on:
   push:
     branches: [master]
     paths:
       - app/*
-      - .github/workflows/todo-app.yml
+      - .github/workflows/taskboard-app.yml
   pull_request:
     branches: [master]
     paths:
       - app/*
-      - .github/workflows/todo-app.yml
+      - .github/workflows/taskboard-app.yml
 
 defaults:
   run:
@@ -27,10 +27,13 @@ jobs:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       - name: build
-        run: docker build -t christianfosli/todo-app:"$GITHUB_SHA" -t christianfosli/todo-app:latest .
+        run: |
+          docker build \
+            -t christianfosli/taskboard-app:"$GITHUB_SHA" \
+            -t christianfosli/taskboard-app:latest .
         env:
           DOCKER_BUILDKIT: 1
       - name: push
         run: |
-          docker push christianfosli/todo-app:"$GITHUB_SHA"
-          docker push christianfosli/todo-app:latest
+          docker push christianfosli/taskboard-app:"$GITHUB_SHA"
+          docker push christianfosli/taskboard-app:latest

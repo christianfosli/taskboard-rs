@@ -1,5 +1,5 @@
 [package]
-name = "todo-app"
+name = "taskboard-app"
 version = "0.1.0"
 authors = ["Christian Fosli <cfosli@gmail.com>"]
 edition = "2018"

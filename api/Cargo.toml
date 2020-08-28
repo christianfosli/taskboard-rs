@@ -1,5 +1,5 @@
 [package]
-name = "todo-api"
+name = "taskboard-api"
 version = "0.1.0"
 authors = ["Christian Fosli <cfosli@gmail.com>"]
 edition = "2018"

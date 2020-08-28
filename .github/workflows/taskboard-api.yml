@@ -1,16 +1,16 @@
-name: todo-api
+name: taskboard-api
 
 on:
   push:
     branches: [master]
     paths:
       - api/*
-      - .github/workflows/todo-api.yml
+      - .github/workflows/taskboard-api.yml
   pull_request:
     branches: [master]
     paths:
       - api/*
-      - .github/workflows/todo-api.yml
+      - .github/workflows/taskboard-api.yml
 
 defaults:
   run:
@@ -28,10 +28,12 @@ jobs:
           PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       - name: build
         run: |
-          docker build -t christianfosli/todo-api:"$GITHUB_SHA" -t christianfosli/todo-api:latest .
+          docker build \
+            -t christianfosli/taskboard-api:"$GITHUB_SHA" \
+            -t christianfosli/taskboard-api:latest .
         env:
           DOCKER_BUILDKIT: 1
       - name: push
         run: |
-          docker push christianfosli/todo-api:"$GITHUB_SHA"
-          docker push christianfosli/todo-api:latest
+          docker push christianfosli/taskboard-api:"$GITHUB_SHA"
+          docker push christianfosli/taskboard-api:latest

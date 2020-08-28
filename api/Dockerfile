@@ -8,6 +8,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM debian:buster-slim as final
 RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/cargo/bin/todo-api /usr/local/bin/todo-api
+COPY --from=builder /usr/local/cargo/bin/taskboard-api /usr/local/bin/taskboard-api
 EXPOSE 8000
-CMD ["todo-api"]
+CMD ["taskboard-api"]

@@ -1,9 +1,9 @@
-# To-Do App
+# Taskboard
 
-![todo-app](https://github.com/christianfosli/todo-rs/workflows/todo-app/badge.svg)
-![todo-api](https://github.com/christianfosli/todo-rs/workflows/todo-api/badge.svg)
+![taskboard-app](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-app/badge.svg)
+![taskboard-api](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-api/badge.svg)
 
-A Kanban inspired to-do app for managing tasks and tracking progress.
+A Kanban inspired board for managing tasks/todo's and tracking progress.
 
 The purpose of this application is mostly for me to play with web development
 with rust, docker, kubernetes and elasticsearch.

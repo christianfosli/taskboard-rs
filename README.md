@@ -3,6 +3,7 @@
 ![taskboard-app](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-app/badge.svg)
 ![taskboard-api](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-api/badge.svg)
 ![taskboard-core-lib](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-core-lib/badge.svg)
+![taskboard-core-lib](https://img.shields.io/crates/v/taskboard-core-lib)
 
 A Kanban inspired board for managing tasks/todo's and tracking progress.
 

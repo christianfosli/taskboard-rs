@@ -1,8 +1,9 @@
+use taskboard_core_lib::{Status, Task};
 use yew::prelude::*;
 
 pub struct TaskBox {
     link: ComponentLink<Self>,
-    onChange: Callback<Task>,
+    onchange: Callback<Task>,
     data: Task,
 }
 
@@ -23,13 +24,13 @@ impl Component for TaskBox {
         Self {
             link,
             data: props.data,
-            onChange: props.onchange,
+            onchange: props.onchange,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::StatusChanged(status) => self.onChange.emit(Task {
+            Msg::StatusChanged(status) => self.onchange.emit(Task {
                 status,
                 ..self.data.clone()
             }),
@@ -39,12 +40,12 @@ impl Component for TaskBox {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         self.data = props.data;
-        self.onChange = props.onchange;
+        self.onchange = props.onchange;
         true
     }
 
     fn view(&self) -> Html {
-        let remWork = match self.data.remaining_work {
+        let rem_work = match self.data.remaining_work {
             Some(hours) => format!("rem: {} hrs", hours),
             None => String::from(""),
         };
@@ -52,7 +53,7 @@ impl Component for TaskBox {
             <li class="todo">
                 <h3>{ &self.data.title }</h3>
                 <p class="status">{ format!("status: {:?}", self.data.status) }</p>
-                <p>{remWork}</p>
+                <p>{rem_work}</p>
                 <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Todo))>{ "Todo" }</button>
                 <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "Do" }</button>
                 <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Done))>{ "Done" }</button>

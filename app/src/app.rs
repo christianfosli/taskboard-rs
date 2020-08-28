@@ -1,4 +1,5 @@
-use crate::components::taskbox::{Status, Task, TaskBox};
+use crate::components::taskbox::TaskBox;
+use taskboard_core_lib::{Status, Task};
 use yew::{
     prelude::*,
     services::{ConsoleService, FetchService},

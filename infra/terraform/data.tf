@@ -2,10 +2,6 @@ variable "RESOURCE_GROUP" {
   default = "rg-taskboard"
 }
 
-variable "STORAGE_ACCOUNT" {
-  default = "stchrfostaskboard"
-}
-
 variable "KUBERNETES_VERSION" {
   default = "1.18.6"
 }

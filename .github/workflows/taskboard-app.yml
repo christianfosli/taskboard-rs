@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: login
+      - name: login docker-hub
         run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
         env:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -37,3 +37,30 @@ jobs:
         run: |
           docker push christianfosli/taskboard-app:"$GITHUB_SHA"
           docker push christianfosli/taskboard-app:latest
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v2
+      - name: login az
+        run: |
+          az login --service-principal -u $CLIENT_ID -p $CLIENT_SECRET --tenant $TENANT
+          az account set -s $SUBSCRIPTION
+        env:
+          CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          TENANT: ${{ secrets.ARM_TENANT }}
+          SUBSCRIPTION: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: login kubectl
+        run: |
+          az aks get-credentials -n "aks-taskboard" -g "rg-taskboard"
+          kubectl version --short
+      - name: patch manifest
+        run: sed "s/christianfosli\/taskboard-app/christianfosli\/taskboard-app:$GITHUB_SHA/" k8s.yml
+      - name: apply
+        run: kubectl apply -f k8s.yml
+      - name: rollout status
+        run: |
+          kubectl rollout status deployment taskboard-app || \
+            (printf "\ndeploy failed!, rolling back...\n\n"; kubectl rollout undo deployment taskboard-app; exit 1)

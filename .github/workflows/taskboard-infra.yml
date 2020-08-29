@@ -38,7 +38,7 @@ jobs:
           terraform show --json release.tfplan > ../testplan.json
       - name: Test
         run: docker run --rm -v "$(pwd):/target" eerkunt/terraform-compliance \
-          -f test -t testplan.json
+          -f test -p testplan.json
         working-directory: infra
       - name: Apply
         run: terraform apply --input=false release.tfplan

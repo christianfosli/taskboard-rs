@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskboard-app-svc
+spec:
+  selector:
+    app: taskboard-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskboard-app-deploy
+  labels:
+    app: taskboard-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: taskboard-app
+  template:
+    metadata:
+      labels:
+        app: taskboard-app
+    spec:
+      containers:
+      - name: taskboard-app
+        image: christianfosli/taskboard-app
+        ports:
+        - containerPort: 80

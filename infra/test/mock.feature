@@ -3,6 +3,7 @@ Feature: Test Feature
   As developers
   We require a passing test
 
-  Given I have azurerm defined
-  Then it must contain version
-  And its value must match the "2\.5" regex
+  Scenario Outline: Azurerm backend
+    Given I have azurerm defined
+    Then it must contain version
+    And its value must match the "2\.5" regex

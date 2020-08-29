@@ -13,6 +13,11 @@ variable "AKS_NODE_POOL" {
   }
 }
 
+variable "K8S_INGRESS_LB_PUBLIC_IP_ID" {
+  type        = string
+  description = "Resource ID of public IP for LB for Ingress for k8s cluster"
+}
+
 data "azurerm_resource_group" "rg" {
   name = var.RESOURCE_GROUP
 }

@@ -1,0 +1,44 @@
+name: taskboard-infra
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - infra/*
+      - .github/workflows/taskboard-infra.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - infra/*
+      - .github/workflows/taskboard-infra.yml
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+defaults:
+  run:
+    working-directory: infra/terraform
+
+jobs:
+  build-test-apply:
+    name: Build, test, apply unless PR-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Init
+        run: |
+          terraform -v
+          terraform init --input=false
+      - name: Plan
+        run: |
+          terraform plan --input=false --refresh=true --lock=false --out "release.tfplan"
+          terraform show --json release.tfplan > ../testplan.json
+      - name: Test
+        run: docker run --rm -v "$(pwd):/target" eerkunt/terraform-compliance -f test -p testplan.json
+        working-directory: infra
+      - name: Apply
+        run: terraform apply --input=false release.tfplan
+        if: github.event_name == 'push'

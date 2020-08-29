@@ -4,12 +4,12 @@ on:
   push:
     branches: [master]
     paths:
-      - core/*
+      - core/**
       - .github/workflows/taskboard-core-lib.yml
   pull_request:
     branches: [master]
     paths:
-      - core/*
+      - core/**
       - .github/workflows/taskboard-core-lib.yml
 
 defaults:

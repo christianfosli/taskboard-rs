@@ -4,12 +4,12 @@ on:
   push:
     branches: [master]
     paths:
-      - api/*
+      - api/**
       - .github/workflows/taskboard-api.yml
   pull_request:
     branches: [master]
     paths:
-      - api/*
+      - api/**
       - .github/workflows/taskboard-api.yml
 
 defaults:

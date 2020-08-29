@@ -4,12 +4,12 @@ on:
   push:
     branches: [master]
     paths:
-      - infra/*
+      - infra/**
       - .github/workflows/taskboard-infra.yml
   pull_request:
     branches: [master]
     paths:
-      - infra/*
+      - infra/**
       - .github/workflows/taskboard-infra.yml
 
 env:

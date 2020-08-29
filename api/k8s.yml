@@ -8,7 +8,7 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 80
+    targetPort: 8000
 
 ---
 apiVersion: apps/v1
@@ -31,4 +31,4 @@ spec:
       - name: taskboard-api
         image: christianfosli/taskboard-api
         ports:
-        - containerPort: 80
+        - containerPort: 8000

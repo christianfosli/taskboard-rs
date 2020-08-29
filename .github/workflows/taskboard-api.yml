@@ -61,7 +61,7 @@ jobs:
       - run: kubectl apply -f k8s.yml
       - name: rollout status
         run: |
-          kubectl rollout status deployment taskboard-app-deploy || \
+          kubectl rollout status deployment taskboard-api-deploy || \
             (printf "\ndeploy failed!, rolling back...\n\n"; \
-             kubectl rollout undo deployment taskboard-app-deploy; \
+             kubectl rollout undo deployment taskboard-api-deploy; \
              exit 1)

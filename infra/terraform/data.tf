@@ -2,7 +2,7 @@ variable "RESOURCE_GROUP" {
   default = "rg-taskboard"
 }
 
-variable "KUBERNETES_VERSION" {
+variable "K8S_VERSION" {
   default = "1.18.6"
 }
 

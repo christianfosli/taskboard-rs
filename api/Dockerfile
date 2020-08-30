@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/src/app/target \
-    cargo install --path .
+    cargo test --release && cargo install --path .
 
 FROM debian:buster-slim as final
 RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*

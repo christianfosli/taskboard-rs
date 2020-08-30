@@ -1,7 +1,8 @@
 #[deny(missing_docs)]
+use serde::{Deserialize, Serialize};
 
 /// A task
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Task {
     /// The task's title
     pub title: String,
@@ -22,7 +23,7 @@ impl Task {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum Status {
     Todo,
     Doing,

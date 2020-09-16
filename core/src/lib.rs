@@ -12,6 +12,15 @@ pub struct Task {
     pub remaining_work: Option<u8>,
 }
 
+/// A wrapper type with a list of tasks associated to a project
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ProjectTasks {
+    /// Id of the project
+    pub project_id: String,
+    /// All tasks associated with the project
+    pub tasks: Vec<Task>,
+}
+
 impl Task {
     /// Creates a new Task with status Todo
     pub fn new(title: &str) -> Task {

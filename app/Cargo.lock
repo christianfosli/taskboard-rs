@@ -415,6 +415,7 @@ dependencies = [
 name = "taskboard-app"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "taskboard-core-lib",
  "wasm-bindgen",
  "yew",

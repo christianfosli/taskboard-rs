@@ -11,3 +11,4 @@ crate-type = ["cdylib", "rlib"]
 yew = "0.17"
 wasm-bindgen = "0.2.67"
 taskboard-core-lib = "0.1.0"
+anyhow = "1.0"

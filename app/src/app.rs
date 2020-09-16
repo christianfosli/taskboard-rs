@@ -1,9 +1,17 @@
+use std::error::Error;
+
 use crate::components::taskbox::TaskBox;
 use taskboard_core_lib::{Status, Task};
 use yew::{
+    format::Json,
+    format::Nothing,
     prelude::*,
+    services::fetch::Request,
+    services::fetch::Response,
     services::{ConsoleService, FetchService},
 };
+
+const api_url: Option<&'static str> = option_env!("API_URL");
 
 pub struct Model {
     link: ComponentLink<Self>,
@@ -17,13 +25,36 @@ pub enum Msg {
     Add,
     Update(Task),
     Delete(Task),
+    FetchCompleted(Vec<Task>),
+    FetchFailed,
 }
 
 impl Model {
     fn fetch_tasks(&mut self) {
         ConsoleService::log("fetching tasks...");
         self.loading = true;
-        // todo: fetch data
+        match api_url {
+            Some(url) => {
+                let req = Request::get(&format!("{}/project-tasks/{}", url, self.project_id))
+                    .body(Nothing)
+                    .unwrap();
+
+                let callback =
+                    self.link
+                        .callback(|res: Response<Json<Result<Vec<Task>, anyhow::Error>>>| {
+                            if let (meta, Json(Ok(body))) = res.into_parts() {
+                                if meta.status.is_success() {
+                                    return Msg::FetchCompleted(body);
+                                }
+                            }
+                            Msg::FetchFailed
+                        });
+
+                let task = FetchService::fetch(req, callback);
+            }
+            None => ConsoleService::error("Unable to fetch tasks due API_URL is not set"),
+        }
+        self.loading = false;
     }
 }
 

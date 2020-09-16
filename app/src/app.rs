@@ -1,7 +1,5 @@
-use std::error::Error;
-
 use crate::components::taskbox::TaskBox;
-use taskboard_core_lib::{Status, Task};
+use taskboard_core_lib::{ProjectTasks, Status, Task};
 use yew::{
     format::Json,
     format::Nothing,
@@ -11,7 +9,7 @@ use yew::{
     services::{ConsoleService, FetchService},
 };
 
-const api_url: Option<&'static str> = option_env!("API_URL");
+const API_URL: Option<&'static str> = option_env!("API_URL");
 
 pub struct Model {
     link: ComponentLink<Self>,
@@ -25,7 +23,7 @@ pub enum Msg {
     Add,
     Update(Task),
     Delete(Task),
-    FetchCompleted(Vec<Task>),
+    FetchCompleted(ProjectTasks),
     FetchFailed,
 }
 
@@ -33,26 +31,26 @@ impl Model {
     fn fetch_tasks(&mut self) {
         ConsoleService::log("fetching tasks...");
         self.loading = true;
-        match api_url {
+        match API_URL {
             Some(url) => {
                 let req = Request::get(&format!("{}/project-tasks/{}", url, self.project_id))
                     .body(Nothing)
                     .unwrap();
 
-                let callback =
-                    self.link
-                        .callback(|res: Response<Json<Result<Vec<Task>, anyhow::Error>>>| {
-                            if let (meta, Json(Ok(body))) = res.into_parts() {
-                                if meta.status.is_success() {
-                                    return Msg::FetchCompleted(body);
-                                }
+                let callback = self.link.callback(
+                    |res: Response<Json<Result<ProjectTasks, anyhow::Error>>>| {
+                        if let (meta, Json(Ok(body))) = res.into_parts() {
+                            if meta.status.is_success() {
+                                return Msg::FetchCompleted(body);
                             }
-                            Msg::FetchFailed
-                        });
+                        }
+                        Msg::FetchFailed
+                    },
+                );
 
                 let task = FetchService::fetch(req, callback);
             }
-            None => ConsoleService::error("Unable to fetch tasks due API_URL is not set"),
+            None => ConsoleService::error("Unable to fetch tasks because API_URL is not set"),
         }
         self.loading = false;
     }
@@ -76,6 +74,8 @@ impl Component for Model {
             Msg::Add => ConsoleService::log("should be adding task"),
             Msg::Update(task) => ConsoleService::log(&format!("Should be updating {}", task.title)),
             Msg::Delete(task) => ConsoleService::log(&format!("Should be deleting {}", task.title)),
+            Msg::FetchCompleted(tasks) => ConsoleService::log(&format!("Fetched: {:?}", tasks)),
+            Msg::FetchFailed => ConsoleService::error("Failed to fetch )-:"),
         }
         false
     }

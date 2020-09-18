@@ -25,4 +25,4 @@ manually if recreating infra from scratch
 ### Other manual steps
 
 The manifests in the k8s folder must be manually applied,
-using `kubectl apply`, for now.
+using `kubectl apply`, or the applicable script, for now.

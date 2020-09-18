@@ -2,7 +2,7 @@
 FROM rust:1.46 as builder
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 WORKDIR /usr/src/app
-ARG API_URL=http://taskboard.cloud/api
+ARG API_URL=https://taskboard.cloud/api
 ENV API_URL=$API_URL
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \

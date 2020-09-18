@@ -33,10 +33,12 @@ impl Model {
         self.loading = true;
         match API_URL {
             Some(url) => {
+                ConsoleService::log(&format!("Building request with API_URL {}", url));
                 let req = Request::get(&format!("{}/project-tasks/{}", url, self.project_id))
                     .body(Nothing)
                     .unwrap();
 
+                ConsoleService::log("preparing callback");
                 let callback = self.link.callback(
                     |res: Response<Json<Result<ProjectTasks, anyhow::Error>>>| {
                         if let (meta, Json(Ok(body))) = res.into_parts() {
@@ -48,7 +50,10 @@ impl Model {
                     },
                 );
 
+                ConsoleService::log("creating fetch task");
                 let task = FetchService::fetch(req, callback);
+
+                ConsoleService::log("fetch_tasks exiting");
             }
             None => ConsoleService::error("Unable to fetch tasks because API_URL is not set"),
         }

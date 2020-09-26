@@ -1,9 +1,10 @@
+#[deny(missing_docs)]
 use serde::{Deserialize, Serialize};
 
 /// A task represents a single job.
 /// Usage example:
 /// ```
-/// use taskboard_core_lib::task::Task;
+/// use taskboard_core_lib::Task;
 /// let task_1 = Task::new(1, "Learn rust");
 /// let task_2 = Task::new(2, "Learn K8S");
 /// assert_ne!(task_1, task_2);

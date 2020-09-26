@@ -1,7 +1,8 @@
-#[deny(missing_docs)]
-/// Commands to work with projects or tasks
+mod project;
+pub use crate::project::*;
+pub use uuid;
+
+mod task;
+pub use crate::task::*;
+
 pub mod commands;
-/// The `Project` struct and related implementations
-pub mod project;
-/// The `Task` struct and related stucts and implemenations
-pub mod task;

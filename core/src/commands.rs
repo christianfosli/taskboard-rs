@@ -18,7 +18,7 @@ pub struct CreateTaskCommand {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UpdateTaskCommand {
     /// Id for the project that the task is a part of
-    pub project_id: String,
+    pub project_id: Uuid,
     /// The updated task
     pub updated_task: Task,
 }

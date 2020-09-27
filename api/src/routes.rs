@@ -33,7 +33,9 @@ pub fn task_routes() -> impl Filter<Extract = impl Reply, Error = Rejection> + C
 #[cfg(test)]
 mod tests {
     use super::*;
-    use taskboard_core_lib::{Status, Task};
+    use taskboard_core_lib::{
+        commands::CreateTaskCommand, commands::UpdateTaskCommand, uuid::Uuid, Status, Task,
+    };
     use warp::hyper::StatusCode;
 
     #[tokio::test]
@@ -69,10 +71,10 @@ mod tests {
         let res = warp::test::request()
             .method("POST")
             .path("/task")
-            .json(&Task {
+            .json(&CreateTaskCommand {
                 title: "created test-task".into(),
-                status: Status::Todo,
-                remaining_work: None,
+                project_id: Uuid::new_v4(),
+                estimate: None,
             })
             .reply(&routes)
             .await;
@@ -87,10 +89,14 @@ mod tests {
         let res = warp::test::request()
             .method("PUT")
             .path("/task")
-            .json(&Task {
-                title: "updated test-task".into(),
-                status: Status::Doing,
-                remaining_work: Some(5),
+            .json(&UpdateTaskCommand {
+                project_id: Uuid::new_v4(),
+                updated_task: Task {
+                    number: 6,
+                    title: "updated test-task".into(),
+                    status: Status::Doing,
+                    remaining_work: Some(5),
+                },
             })
             .reply(&routes)
             .await;

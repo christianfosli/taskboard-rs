@@ -1,5 +1,7 @@
 use crate::components::taskbox::TaskBox;
-use taskboard_core_lib::{ProjectTasks, Task};
+use anyhow::Error;
+use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, ProjectTasks, Task};
+use wasm_bindgen::JsValue;
 use yew::{
     format::Json,
     format::Nothing,
@@ -8,13 +10,14 @@ use yew::{
     services::fetch::Request,
     services::fetch::Response,
     services::{ConsoleService, FetchService},
+    web_sys,
 };
 
 const API_URL: Option<&'static str> = option_env!("API_URL");
 
 pub struct Model {
     link: ComponentLink<Self>,
-    project_id: String,
+    project_id: Uuid,
     project_title: String,
     tasks: Option<Vec<Task>>,
     ft: Option<FetchTask>,
@@ -28,9 +31,9 @@ enum FetchStatus {
 }
 
 pub enum Msg {
-    Add(String),
+    Add,
+    Added,
     Update(Task),
-    Delete(Task),
     FetchCompleted(ProjectTasks),
     FetchFailed,
 }
@@ -62,8 +65,52 @@ impl Model {
         }
     }
 
-    fn add_task(&mut self, title: &str) {
-        ConsoleService::log(&format!("Should be adding task {}", title))
+    fn add_task(&mut self) -> Result<(), JsValue> {
+        let window = web_sys::window().ok_or(JsValue::from_str("No window avilable"))?;
+        let title = window
+            .prompt_with_message("Enter task name")?
+            .ok_or("No task name specified")?;
+        let estimate: Option<u8> =
+            match window.prompt_with_message("Enter estimate (or leave blank)")? {
+                Some(est) => {
+                    if est.is_empty() {
+                        None
+                    } else {
+                        Some(
+                            est.parse::<u8>()
+                                .map_err(|err| JsValue::from(err.to_string()))?,
+                        )
+                    }
+                }
+                None => None,
+            };
+
+        let command = CreateTaskCommand {
+            project_id: self.project_id,
+            title,
+            estimate,
+        };
+
+        let req = Request::post(&format!("{}/task", API_URL.unwrap()))
+            .header("Content-Type", "application/json")
+            .body(Json(&command))
+            .map_err(|_| JsValue::from("Failed to build post request"))?;
+
+        let task = FetchService::fetch(
+            req,
+            self.link.callback(|res: Response<Result<String, Error>>| {
+                if res.status().is_success() {
+                    Msg::Added
+                } else {
+                    Msg::FetchFailed
+                }
+            }),
+        )
+        .map_err(|_| JsValue::from("Failed to send post request for adding task"))?;
+
+        self.ft = Some(task);
+
+        Ok(())
     }
 }
 
@@ -73,7 +120,7 @@ impl Component for Model {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             link,
-            project_id: String::from("tmp-id"), // TODO - get from query param
+            project_id: Uuid::nil(), // TODO - get from query param
             project_title: String::from("tmp"),
             tasks: None,
             ft: None,
@@ -83,9 +130,11 @@ impl Component for Model {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Add(title) => self.add_task(&title),
+            Msg::Add => self
+                .add_task()
+                .unwrap_or_else(|err| ConsoleService::error(&err.as_string().unwrap())),
+            Msg::Added => self.fetch_tasks(),
             Msg::Update(task) => ConsoleService::log(&format!("Should be updating {}", task.title)),
-            Msg::Delete(task) => ConsoleService::log(&format!("Should be deleting {}", task.title)),
             Msg::FetchCompleted(tasks) => {
                 self.tasks = Some(tasks.tasks);
                 self.fetch_status = FetchStatus::Completed;
@@ -139,6 +188,7 @@ impl Component for Model {
             <main>
             <h1>{ &format!("Taskboard for {}", self.project_title) }</h1>
             <div class="status-msg">{ status_message }</div>
+            <button id="newtask-btn" onclick=self.link.callback(|_| Msg::Add)>{ "new"} </button>
             {task_list}
             </main>
         }

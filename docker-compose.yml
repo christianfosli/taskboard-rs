@@ -5,10 +5,14 @@ services:
       context: ./app
       args:
         API_URL: http://localhost:8000
+        BUILD_PROFILE: dev
     ports:
       - "80:80"
   api:
-    build: ./api
+    build:
+      context: ./api
+      args:
+        CARGO_INSTALL_OPTIONS: "--debug"
     ports:
       - "8000:8000"
   es:

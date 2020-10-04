@@ -32,3 +32,13 @@ spec:
         image: christianfosli/taskboard-api
         ports:
         - containerPort: 8000
+        env:
+        - name: ELASTIC_URL
+          value: https://taskboard-es-http:9200
+        - name: ELASTIC_USERNAME
+          value: elastic
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: taskboard-es-elastic-user
+              key: elastic

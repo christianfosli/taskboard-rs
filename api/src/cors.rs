@@ -10,12 +10,11 @@ pub fn cors() -> Builder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::routes;
     use warp::{hyper::StatusCode, Filter};
 
     #[tokio::test]
     async fn preflight_request_from_localhost_should_be_ok() {
-        let route_with_cors = routes::health_check_route().with(cors());
+        let route_with_cors = warp::any().map(warp::reply).with(cors());
 
         let res = warp::test::request()
             .method("OPTIONS")

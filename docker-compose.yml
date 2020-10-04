@@ -15,6 +15,8 @@ services:
         CARGO_INSTALL_OPTIONS: "--debug"
     ports:
       - "8000:8000"
+    environment:
+      ELASTICSEARCH_URL: http://es:9200
   es:
     image: elasticsearch:7.9.0
     expose:

@@ -1,6 +1,16 @@
-use std::convert::Infallible;
-use warp::Reply;
+use crate::store::TaskStore;
+use warp::{reject, Rejection, Reply};
 
-pub async fn handle_health() -> Result<impl Reply, Infallible> {
+#[derive(Clone, Debug)]
+struct TaskStoreUnreachable;
+
+impl warp::reject::Reject for TaskStoreUnreachable {}
+
+pub async fn handle_health(store: impl TaskStore) -> Result<impl Reply, Rejection> {
+    store.ping().await.map_err(|e| {
+        warn!("Healthcheck failed: {:?}", e);
+        reject::custom(TaskStoreUnreachable {})
+    })?;
+
     Ok("OK")
 }

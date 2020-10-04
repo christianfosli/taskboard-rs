@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn health_check_should_be_ok() {
+    async fn health_check_given_taskstore_up_should_be_ok() {
         let store = MockTaskStore { success: true };
         let route = health_check_route(&store);
 
@@ -94,10 +94,11 @@ mod tests {
             .await;
 
         assert!(res.status().is_success());
+        assert_eq!("OK", res.body())
     }
 
     #[tokio::test]
-    async fn health_check_should_fail() {
+    async fn health_check_given_taskstore_down_should_be_degraded() {
         let store = MockTaskStore { success: false };
         let route = health_check_route(&store);
 
@@ -107,7 +108,10 @@ mod tests {
             .reply(&route)
             .await;
 
-        assert!(res.status().is_server_error());
+        assert!(res.status().is_success());
+
+        let response = String::from_utf8(res.body().to_vec()).unwrap();
+        assert!(response.contains("Degraded"));
     }
 
     #[tokio::test]

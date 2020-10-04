@@ -1,11 +1,20 @@
-use crate::handlers::{
-    health::handle_health, task_create::handle_task_create, task_get::handle_task_get,
-    task_list::handle_task_list, task_update::handle_task_update,
-};
 use warp::{Filter, Rejection, Reply};
 
-pub fn health_check_route() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    warp::path!("healthz").and_then(handle_health)
+use crate::{
+    handlers::{
+        health::handle_health, task_create::handle_task_create, task_get::handle_task_get,
+        task_list::handle_task_list, task_update::handle_task_update,
+    },
+    store::with_store,
+    store::TaskStore,
+};
+
+pub fn health_check_route<T: TaskStore + Clone + Sync + Send>(
+    store: &T,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+    warp::path!("healthz")
+        .and(with_store(store.clone()))
+        .and_then(handle_health)
 }
 
 pub fn task_routes() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
@@ -33,14 +42,50 @@ pub fn task_routes() -> impl Filter<Extract = impl Reply, Error = Rejection> + C
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::{anyhow, Error};
+    use async_trait::async_trait;
     use taskboard_core_lib::{
         commands::CreateTaskCommand, commands::UpdateTaskCommand, uuid::Uuid, Status, Task,
     };
     use warp::hyper::StatusCode;
 
+    #[derive(Debug, Clone)]
+    struct MockTaskStore {
+        success: bool,
+    }
+
+    #[async_trait]
+    impl TaskStore for MockTaskStore {
+        async fn ping(&self) -> Result<(), Error> {
+            match self.success {
+                true => Ok(()),
+                false => Err(anyhow!("MockTaskStoreError: Ping failed")),
+            }
+        }
+        async fn fetch_task(&self, number: usize) -> Result<Task, Error> {
+            match self.success {
+                true => Ok(Task::new(number, "mock")),
+                false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
+            }
+        }
+        async fn fetch_tasks(&self, _: &Uuid) -> Result<Vec<Task>, Error> {
+            match self.success {
+                true => Ok(vec![Task::new(1, "mock")]),
+                false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
+            }
+        }
+        async fn persist(&self, _: &Task) -> Result<(), Error> {
+            match self.success {
+                true => Ok(()),
+                false => Err(anyhow!("MockTaskStoreError: Could not persist")),
+            }
+        }
+    }
+
     #[tokio::test]
     async fn health_check_should_be_ok() {
-        let route = health_check_route();
+        let store = MockTaskStore { success: true };
+        let route = health_check_route(&store);
 
         let res = warp::test::request()
             .method("GET")
@@ -48,7 +93,21 @@ mod tests {
             .reply(&route)
             .await;
 
-        assert_eq!(StatusCode::OK, res.status());
+        assert!(res.status().is_success());
+    }
+
+    #[tokio::test]
+    async fn health_check_should_fail() {
+        let store = MockTaskStore { success: false };
+        let route = health_check_route(&store);
+
+        let res = warp::test::request()
+            .method("GET")
+            .path("/healthz")
+            .reply(&route)
+            .await;
+
+        assert!(res.status().is_server_error());
     }
 
     #[tokio::test]

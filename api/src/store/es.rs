@@ -2,14 +2,20 @@ use std::env;
 
 use anyhow::Error;
 use async_trait::async_trait;
-use elasticsearch::{http::transport::Transport, Elasticsearch};
+use elasticsearch::{
+    auth::Credentials, http::transport::SingleNodeConnectionPool,
+    http::transport::TransportBuilder, http::Url, Elasticsearch,
+};
 use taskboard_core_lib::{uuid::Uuid, Task};
 
 use crate::store::TaskStore;
 
 pub fn create_client() -> Result<Elasticsearch, Error> {
-    let es_url = env::var("ELASTICSEARCH_URL")?;
-    let transport = Transport::single_node(&es_url)?;
+    let url = Url::parse(&env::var("ELASTIC_URL")?)?;
+    let conn_pool = SingleNodeConnectionPool::new(url);
+    let credentials =
+        Credentials::Basic(env::var("ELASTIC_USERNAME")?, env::var("ELASTIC_PASSWORD")?);
+    let transport = TransportBuilder::new(conn_pool).auth(credentials).build()?;
     let client = Elasticsearch::new(transport);
     Ok(client)
 }

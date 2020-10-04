@@ -16,15 +16,18 @@ services:
     ports:
       - "8000:8000"
     environment:
-      ELASTICSEARCH_URL: http://es:9200
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: secret
+      ELASTIC_URL: http://es:9200
   es:
     image: elasticsearch:7.9.0
-    expose:
-      - "9200"
-      - "9300"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     environment:
       discovery.type: single-node
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ELASTIC_PASSWORD: secret
   kib:
     image: kibana:7.9.0
     ports:

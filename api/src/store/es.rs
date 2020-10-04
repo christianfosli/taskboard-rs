@@ -3,7 +3,7 @@ use std::env;
 use anyhow::Error;
 use async_trait::async_trait;
 use elasticsearch::{
-    auth::Credentials, http::transport::SingleNodeConnectionPool,
+    auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
     http::transport::TransportBuilder, http::Url, Elasticsearch,
 };
 use taskboard_core_lib::{uuid::Uuid, Task};
@@ -15,8 +15,15 @@ pub fn create_client() -> Result<Elasticsearch, Error> {
     let conn_pool = SingleNodeConnectionPool::new(url);
     let credentials =
         Credentials::Basic(env::var("ELASTIC_USERNAME")?, env::var("ELASTIC_PASSWORD")?);
-    let transport = TransportBuilder::new(conn_pool).auth(credentials).build()?;
+    let validation = CertificateValidation::None; // ECK uses self-signed cert
+
+    let transport = TransportBuilder::new(conn_pool)
+        .auth(credentials)
+        .cert_validation(validation)
+        .build()?;
+
     let client = Elasticsearch::new(transport);
+
     Ok(client)
 }
 

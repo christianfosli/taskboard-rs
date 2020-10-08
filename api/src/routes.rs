@@ -62,9 +62,9 @@ mod tests {
                 false => Err(anyhow!("MockTaskStoreError: Ping failed")),
             }
         }
-        async fn fetch_task(&self, number: usize) -> Result<Task, Error> {
+        async fn fetch_task(&self, _: &Uuid, number: usize) -> Result<Option<Task>, Error> {
             match self.success {
-                true => Ok(Task::new(number, "mock")),
+                true => Ok(Some(Task::new(number, "mock"))),
                 false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
             }
         }
@@ -74,7 +74,7 @@ mod tests {
                 false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
             }
         }
-        async fn persist(&self, _: &Task) -> Result<(), Error> {
+        async fn persist(&self, _: &Uuid, _: &Task) -> Result<(), Error> {
             match self.success {
                 true => Ok(()),
                 false => Err(anyhow!("MockTaskStoreError: Could not persist")),

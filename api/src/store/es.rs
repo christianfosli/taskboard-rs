@@ -1,11 +1,12 @@
 use std::env;
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 use elasticsearch::{
     auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
-    http::transport::TransportBuilder, http::Url, Elasticsearch,
+    http::transport::TransportBuilder, http::Url, Elasticsearch, IndexParts, SearchParts,
 };
+use serde_json::{json, Value};
 use taskboard_core_lib::{uuid::Uuid, Task};
 
 use crate::store::TaskStore;
@@ -34,13 +35,55 @@ impl TaskStore for Elasticsearch {
         res.error_for_status_code()?;
         Ok(())
     }
-    async fn fetch_task(&self, _number: usize) -> Result<Task, Error> {
-        todo!()
+    async fn fetch_task(&self, project_id: &Uuid, number: usize) -> Result<Option<Task>, Error> {
+        let res = self
+            .search(SearchParts::Index(&[&format!("tasks-{}", project_id)]))
+            .body(json!({
+                "query": {
+                    "match": {
+                        "_id": number,
+                    },
+                }
+            }))
+            .send()
+            .await?;
+        res.error_for_status_code_ref()?;
+        let task = res.json::<Task>().await?;
+        Ok(Some(task))
     }
-    async fn fetch_tasks(&self, _project_id: &Uuid) -> Result<Vec<Task>, Error> {
-        todo!()
+    async fn fetch_tasks(&self, project_id: &Uuid) -> Result<Vec<Task>, Error> {
+        let res = self
+            .search(SearchParts::Index(&[&format!("task-{}", project_id)]))
+            .body(json!({
+                "query": {
+                    "match_all": {}
+                }
+            }))
+            .send()
+            .await?;
+        res.error_for_status_code_ref()?;
+        let response_body = res.json::<Value>().await?;
+        let hits = response_body["hits"]["hits"]
+            .as_array()
+            .ok_or(anyhow!("res has no hits array"))?;
+        let tasks = hits
+            .into_iter()
+            .map(|t| {
+                serde_json::from_value::<Task>(t["_source"].clone()).expect("task not mappable")
+            })
+            .collect();
+        Ok(tasks)
     }
-    async fn persist(&self, _task: &Task) -> Result<(), Error> {
-        todo!()
+    async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error> {
+        let res = self
+            .index(IndexParts::IndexId(
+                &format!("task-{}", project_id),
+                &task.number.to_string(),
+            ))
+            .body(task)
+            .send()
+            .await?;
+        res.error_for_status_code()?;
+        Ok(())
     }
 }

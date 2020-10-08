@@ -17,13 +17,16 @@ pub fn health_check_route<T: TaskStore + Clone + Sync + Send>(
         .and_then(handle_health)
 }
 
-pub fn task_routes() -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
+    store: &T,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let get = warp::path!("task" / String)
         .and(warp::get())
         .and_then(handle_task_get);
 
     let create = warp::path!("task")
         .and(warp::post())
+        .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(handle_task_create);
 
@@ -34,7 +37,8 @@ pub fn task_routes() -> impl Filter<Extract = impl Reply, Error = Rejection> + C
 
     let get_for_project = warp::path!("project-tasks" / String)
         .and(warp::get())
-        .and_then(handle_task_list);
+        .and(with_store(store.clone()))
+        .and_then(|id, store| handle_task_list(store, id));
 
     get.or(create).or(update).or(get_for_project)
 }
@@ -62,9 +66,9 @@ mod tests {
                 false => Err(anyhow!("MockTaskStoreError: Ping failed")),
             }
         }
-        async fn fetch_task(&self, number: usize) -> Result<Task, Error> {
+        async fn fetch_task(&self, _: &Uuid, number: usize) -> Result<Option<Task>, Error> {
             match self.success {
-                true => Ok(Task::new(number, "mock")),
+                true => Ok(Some(Task::new(number, "mock"))),
                 false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
             }
         }
@@ -74,7 +78,7 @@ mod tests {
                 false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
             }
         }
-        async fn persist(&self, _: &Task) -> Result<(), Error> {
+        async fn persist(&self, _: &Uuid, _: &Task) -> Result<(), Error> {
             match self.success {
                 true => Ok(()),
                 false => Err(anyhow!("MockTaskStoreError: Could not persist")),
@@ -116,7 +120,8 @@ mod tests {
 
     #[tokio::test]
     async fn get_task_should_be_ok() {
-        let routes = task_routes();
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
 
         let res = warp::test::request()
             .method("GET")
@@ -129,7 +134,8 @@ mod tests {
 
     #[tokio::test]
     async fn create_task_should_create() {
-        let routes = task_routes();
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
 
         let res = warp::test::request()
             .method("POST")
@@ -147,7 +153,8 @@ mod tests {
 
     #[tokio::test]
     async fn update_task_should_be_ok() {
-        let routes = task_routes();
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
 
         let res = warp::test::request()
             .method("PUT")
@@ -169,11 +176,14 @@ mod tests {
 
     #[tokio::test]
     async fn get_for_project_should_be_ok() {
-        let routes = task_routes();
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
+
+        let some_project_id = Uuid::new_v4();
 
         let res = warp::test::request()
             .method("GET")
-            .path("/project-tasks/some-project-id")
+            .path(&format!("/project-tasks/{}", some_project_id))
             .reply(&routes)
             .await;
 

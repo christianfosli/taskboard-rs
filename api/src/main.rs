@@ -13,7 +13,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let es_client = store::es::create_client()?;
 
-    let routes = routes::task_routes()
+    let routes = routes::task_routes(&es_client)
         .or(routes::health_check_route(&es_client))
         .with(cors::cors())
         .with(warp::log("taskboard_api"));

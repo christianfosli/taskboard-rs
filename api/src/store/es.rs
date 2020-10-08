@@ -1,12 +1,12 @@
 use std::env;
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 use elasticsearch::{
     auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
     http::transport::TransportBuilder, http::Url, Elasticsearch, IndexParts, SearchParts,
 };
-use serde_json::json;
+use serde_json::{json, Value};
 use taskboard_core_lib::{uuid::Uuid, Task};
 
 use crate::store::TaskStore;
@@ -62,7 +62,16 @@ impl TaskStore for Elasticsearch {
             .send()
             .await?;
         res.error_for_status_code_ref()?;
-        let tasks = res.json::<Vec<Task>>().await?;
+        let response_body = res.json::<Value>().await?;
+        let hits = response_body["hits"]["hits"]
+            .as_array()
+            .ok_or(anyhow!("res has no hits array"))?;
+        let tasks = hits
+            .into_iter()
+            .map(|t| {
+                serde_json::from_value::<Task>(t["_source"].clone()).expect("task not mappable")
+            })
+            .collect();
         Ok(tasks)
     }
     async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error> {
@@ -71,7 +80,7 @@ impl TaskStore for Elasticsearch {
                 &format!("task-{}", project_id),
                 &task.number.to_string(),
             ))
-            .body(&task)
+            .body(task)
             .send()
             .await?;
         res.error_for_status_code()?;

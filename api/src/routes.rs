@@ -37,7 +37,8 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
 
     let get_for_project = warp::path!("project-tasks" / String)
         .and(warp::get())
-        .and_then(handle_task_list);
+        .and(with_store(store.clone()))
+        .and_then(|id, store| handle_task_list(store, id));
 
     get.or(create).or(update).or(get_for_project)
 }
@@ -178,9 +179,11 @@ mod tests {
         let store = MockTaskStore { success: true };
         let routes = task_routes(&store);
 
+        let some_project_id = Uuid::new_v4();
+
         let res = warp::test::request()
             .method("GET")
-            .path("/project-tasks/some-project-id")
+            .path(&format!("/project-tasks/{}", some_project_id))
             .reply(&routes)
             .await;
 

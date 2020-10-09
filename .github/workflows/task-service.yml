@@ -1,20 +1,20 @@
-name: taskboard-api
+name: task-service
 
 on:
   push:
     branches: [master]
     paths:
-      - api/**
-      - .github/workflows/taskboard-api.yml
+      - task-service/**
+      - .github/workflows/task-service.yml
   pull_request:
     branches: [master]
     paths:
-      - api/**
-      - .github/workflows/taskboard-api.yml
+      - task-service/**
+      - .github/workflows/task-service.yml
 
 defaults:
   run:
-    working-directory: api
+    working-directory: task-service
 
 jobs:
   build:
@@ -29,14 +29,14 @@ jobs:
       - name: build
         run: |
           docker build \
-            -t christianfosli/taskboard-api:"$GITHUB_SHA" \
-            -t christianfosli/taskboard-api:latest .
+            -t christianfosli/taskboard-task-service:"$GITHUB_SHA" \
+            -t christianfosli/taskboard-task-service:latest .
         env:
           DOCKER_BUILDKIT: 1
       - name: push
         run: |
-          docker push christianfosli/taskboard-api:"$GITHUB_SHA"
-          docker push christianfosli/taskboard-api:latest
+          docker push christianfosli/taskboard-task-service:"$GITHUB_SHA"
+          docker push christianfosli/taskboard-task-service:latest
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -57,11 +57,11 @@ jobs:
           az aks get-credentials -n "aks-taskboard" -g "rg-taskboard"
           kubectl version --short
       - name: patch manifest
-        run: sed -i "s|christianfosli/taskboard-api|christianfosli/taskboard-api:$GITHUB_SHA|" k8s.yml
+        run: sed -i "s|christianfosli/taskboard-task-service|christianfosli/taskboard-task-service:$GITHUB_SHA|" k8s.yml
       - run: kubectl apply -f k8s.yml
       - name: rollout status
         run: |
-          kubectl rollout status deployment taskboard-api-deploy || \
+          kubectl rollout status deployment task || \
             (printf "\ndeploy failed!, rolling back...\n\n"; \
-             kubectl rollout undo deployment taskboard-api-deploy; \
+             kubectl rollout undo deployment task \
              exit 1)

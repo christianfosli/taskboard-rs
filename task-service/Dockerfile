@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM debian:buster-slim as final
 RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/cargo/bin/taskboard-api /usr/local/bin/taskboard-api
+COPY --from=builder /usr/local/cargo/bin/task-service /usr/local/bin/task-service
 ENV RUST_LOG=info
-EXPOSE 8000
-CMD ["taskboard-api"]
+EXPOSE 80
+CMD ["task-service"]

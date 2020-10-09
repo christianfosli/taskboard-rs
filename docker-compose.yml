@@ -8,13 +8,24 @@ services:
         BUILD_PROFILE: dev
     ports:
       - "80:80"
-  api:
+  tasksvc:
     build:
-      context: ./api
+      context: ./task-service
       args:
         CARGO_INSTALL_OPTIONS: "--debug"
     ports:
-      - "8000:8000"
+      - "8000:80"
+    environment:
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: secret
+      ELASTIC_URL: http://es:9200
+  projectsvc:
+    build:
+      context: ./project-service
+      args:
+        CARGO_INSTALL_OPTIONS: "--debug"
+    ports:
+      - "8001:80"
     environment:
       ELASTIC_USERNAME: elastic
       ELASTIC_PASSWORD: secret

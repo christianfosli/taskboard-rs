@@ -1,7 +1,8 @@
-# Taskboard-API
+# Task Service
 
-Back-end web server for [taskboard-rs](https://github.com/christianfosli/taskboard-rs)
-using [warp](https://github.com/seanmonstar/warp).
+Back-end web service for [taskboard-rs](https://github.com/christianfosli/taskboard-rs)
+using [warp](https://github.com/seanmonstar/warp),
+to manage tasks/todo's.
 
 Available as a [Docker
 container](https://hub.docker.com/repository/docker/christianfosli/taskboard-api).

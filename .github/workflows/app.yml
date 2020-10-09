@@ -1,0 +1,67 @@
+name: app
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - app/**
+      - .github/workflows/app.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - app/**
+      - .github/workflows/app.yml
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: login docker-hub
+        run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+        env:
+          USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: build
+        run: |
+          docker build \
+            -t christianfosli/taskboard-app:"$GITHUB_SHA" \
+            -t christianfosli/taskboard-app:latest .
+        env:
+          DOCKER_BUILDKIT: 1
+      - name: push
+        run: |
+          docker push christianfosli/taskboard-app:"$GITHUB_SHA"
+          docker push christianfosli/taskboard-app:latest
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v2
+      - name: login az
+        run: |
+          az login --service-principal -u "$CLIENT_ID" -p "$CLIENT_SECRET" --tenant "$TENANT_ID"
+          az account set -s "$SUBSCRIPTION"
+        env:
+          CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: login kubectl
+        run: |
+          az aks get-credentials -n "aks-taskboard" -g "rg-taskboard"
+          kubectl version --short
+      - name: patch manifest
+        run: sed -i "s|christianfosli/taskboard-app|christianfosli/taskboard-app:$GITHUB_SHA|" k8s.yml
+      - run: kubectl apply -f k8s.yml
+      - name: rollout status
+        run: |
+          kubectl rollout status deployment taskboard-app-deploy || \
+            (printf "\ndeploy failed!, rolling back...\n\n"; \
+             kubectl rollout undo deployment taskboard-app-deploy; \
+             exit 1)

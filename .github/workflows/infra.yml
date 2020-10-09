@@ -1,16 +1,16 @@
-name: taskboard-infra
+name: infra
 
 on:
   push:
     branches: [master]
     paths:
       - infra/**
-      - .github/workflows/taskboard-infra.yml
+      - .github/workflows/infra.yml
   pull_request:
     branches: [master]
     paths:
       - infra/**
-      - .github/workflows/taskboard-infra.yml
+      - .github/workflows/infra.yml
 
 env:
   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}

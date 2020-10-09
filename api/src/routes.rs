@@ -2,8 +2,8 @@ use warp::{Filter, Rejection, Reply};
 
 use crate::{
     handlers::{
-        health::handle_health, task_create::handle_task_create, task_get::handle_task_get,
-        task_list::handle_task_list, task_update::handle_task_update,
+        health::handle_health, task_create::handle_task_create, task_list::handle_task_list,
+        task_update::handle_task_update,
     },
     store::with_store,
     store::TaskStore,
@@ -20,9 +20,10 @@ pub fn health_check_route<T: TaskStore + Clone + Sync + Send>(
 pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
     store: &T,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    let get = warp::path!("task" / String)
+    let get = warp::path!("project-tasks" / String)
         .and(warp::get())
-        .and_then(handle_task_get);
+        .and(with_store(store.clone()))
+        .and_then(|id, store| handle_task_list(store, id));
 
     let create = warp::path!("task")
         .and(warp::post())
@@ -35,12 +36,7 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
         .and(warp::body::json())
         .and_then(handle_task_update);
 
-    let get_for_project = warp::path!("project-tasks" / String)
-        .and(warp::get())
-        .and(with_store(store.clone()))
-        .and_then(|id, store| handle_task_list(store, id));
-
-    get.or(create).or(update).or(get_for_project)
+    get.or(create).or(update)
 }
 
 #[cfg(test)]
@@ -64,12 +60,6 @@ mod tests {
             match self.success {
                 true => Ok(()),
                 false => Err(anyhow!("MockTaskStoreError: Ping failed")),
-            }
-        }
-        async fn fetch_task(&self, _: &Uuid, number: usize) -> Result<Option<Task>, Error> {
-            match self.success {
-                true => Ok(Some(Task::new(number, "mock"))),
-                false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
             }
         }
         async fn fetch_tasks(&self, _: &Uuid) -> Result<Vec<Task>, Error> {
@@ -116,20 +106,6 @@ mod tests {
 
         let response = String::from_utf8(res.body().to_vec()).unwrap();
         assert!(response.contains("Degraded"));
-    }
-
-    #[tokio::test]
-    async fn get_task_should_be_ok() {
-        let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
-
-        let res = warp::test::request()
-            .method("GET")
-            .path("/task/some-dummy-id")
-            .reply(&routes)
-            .await;
-
-        assert_eq!(StatusCode::OK, res.status());
     }
 
     #[tokio::test]

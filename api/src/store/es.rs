@@ -4,7 +4,8 @@ use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 use elasticsearch::{
     auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
-    http::transport::TransportBuilder, http::Url, Elasticsearch, IndexParts, SearchParts,
+    http::transport::TransportBuilder, http::StatusCode, http::Url, Elasticsearch, IndexParts,
+    SearchParts,
 };
 use serde_json::{json, Value};
 use taskboard_core_lib::{uuid::Uuid, Task};
@@ -35,22 +36,7 @@ impl TaskStore for Elasticsearch {
         res.error_for_status_code()?;
         Ok(())
     }
-    async fn fetch_task(&self, project_id: &Uuid, number: usize) -> Result<Option<Task>, Error> {
-        let res = self
-            .search(SearchParts::Index(&[&format!("tasks-{}", project_id)]))
-            .body(json!({
-                "query": {
-                    "match": {
-                        "_id": number,
-                    },
-                }
-            }))
-            .send()
-            .await?;
-        res.error_for_status_code_ref()?;
-        let task = res.json::<Task>().await?;
-        Ok(Some(task))
-    }
+
     async fn fetch_tasks(&self, project_id: &Uuid) -> Result<Vec<Task>, Error> {
         let res = self
             .search(SearchParts::Index(&[&format!("task-{}", project_id)]))
@@ -61,19 +47,30 @@ impl TaskStore for Elasticsearch {
             }))
             .send()
             .await?;
-        res.error_for_status_code_ref()?;
-        let response_body = res.json::<Value>().await?;
-        let hits = response_body["hits"]["hits"]
-            .as_array()
-            .ok_or(anyhow!("res has no hits array"))?;
-        let tasks = hits
-            .into_iter()
-            .map(|t| {
-                serde_json::from_value::<Task>(t["_source"].clone()).expect("task not mappable")
-            })
-            .collect();
-        Ok(tasks)
+
+        match res.status_code() {
+            StatusCode::OK => {
+                let response_body = res.json::<Value>().await?;
+                let hits = response_body["hits"]["hits"]
+                    .as_array()
+                    .ok_or(anyhow!("res has no hits array"))?;
+                let tasks = hits
+                    .into_iter()
+                    .map(|t| {
+                        serde_json::from_value::<Task>(t["_source"].clone())
+                            .expect("task not mappable")
+                    })
+                    .collect();
+                Ok(tasks)
+            }
+            StatusCode::NOT_FOUND => Ok(vec![]),
+            _ => {
+                res.error_for_status_code_ref()?;
+                unreachable!("unexpected result from elasticsearch");
+            }
+        }
     }
+
     async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error> {
         let res = self
             .index(IndexParts::IndexId(

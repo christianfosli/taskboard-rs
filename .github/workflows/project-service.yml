@@ -1,27 +1,27 @@
-name: taskboard-app
+name: project-service
 
 on:
   push:
     branches: [master]
     paths:
-      - app/**
-      - .github/workflows/taskboard-app.yml
+      - project-service/**
+      - .github/workflows/project-service.yml
   pull_request:
     branches: [master]
     paths:
-      - app/**
-      - .github/workflows/taskboard-app.yml
+      - project-service/**
+      - .github/workflows/project-service.yml
 
 defaults:
   run:
-    working-directory: app
+    working-directory: project-service
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: login docker-hub
+      - name: login
         run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
         env:
           USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -29,14 +29,14 @@ jobs:
       - name: build
         run: |
           docker build \
-            -t christianfosli/taskboard-app:"$GITHUB_SHA" \
-            -t christianfosli/taskboard-app:latest .
+            -t christianfosli/taskboard-project-service:"$GITHUB_SHA" \
+            -t christianfosli/taskboard-project-service:latest .
         env:
           DOCKER_BUILDKIT: 1
       - name: push
         run: |
-          docker push christianfosli/taskboard-app:"$GITHUB_SHA"
-          docker push christianfosli/taskboard-app:latest
+          docker push christianfosli/taskboard-project-service:"$GITHUB_SHA"
+          docker push christianfosli/taskboard-project-service:latest
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -57,11 +57,11 @@ jobs:
           az aks get-credentials -n "aks-taskboard" -g "rg-taskboard"
           kubectl version --short
       - name: patch manifest
-        run: sed -i "s|christianfosli/taskboard-app|christianfosli/taskboard-app:$GITHUB_SHA|" k8s.yml
+        run: sed -i "s|christianfosli/taskboard-project-service|christianfosli/taskboard-project-service:$GITHUB_SHA|" k8s.yml
       - run: kubectl apply -f k8s.yml
       - name: rollout status
         run: |
-          kubectl rollout status deployment taskboard-app-deploy || \
+          kubectl rollout status deployment project-deploy || \
             (printf "\ndeploy failed!, rolling back...\n\n"; \
-             kubectl rollout undo deployment taskboard-app-deploy; \
+             kubectl rollout undo deployment project-deploy; \
              exit 1)

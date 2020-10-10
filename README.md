@@ -1,10 +1,11 @@
 # Taskboard
 
-![taskboard-app](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-app/badge.svg)
-![taskboard-api](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-api/badge.svg)
-![taskboard-core-lib](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-core-lib/badge.svg)
-[![taskboard-core-lib](https://img.shields.io/crates/v/taskboard-core-lib)](https://crates.io/crates/taskboard-core-lib)
-![taskboard-infra](https://github.com/christianfosli/taskboard-rs/workflows/taskboard-infra/badge.svg)
+![app](https://github.com/christianfosli/taskboard-rs/workflows/app/badge.svg)
+![task-service](https://github.com/christianfosli/taskboard-rs/workflows/task-service/badge.svg)
+![project-service](https://github.com/christianfosli/taskboard-rs/workflows/project-service/badge.svg)
+![core-lib](https://github.com/christianfosli/taskboard-rs/workflows/core-lib/badge.svg)
+[![core-lib](https://img.shields.io/crates/v/taskboard-core-lib)](https://crates.io/crates/taskboard-core-lib)
+![infra](https://github.com/christianfosli/taskboard-rs/workflows/infra/badge.svg)
 
 A Kanban inspired board for managing tasks/todo's and tracking progress.
 

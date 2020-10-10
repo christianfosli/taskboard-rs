@@ -1,4 +1,5 @@
-use anyhow::Error;
+use std::iter;
+
 use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, ProjectTasks, Task};
 use wasm_bindgen::JsValue;
 use yew::{
@@ -28,7 +29,7 @@ enum FetchStatus {
 
 pub enum Msg {
     Add,
-    Added,
+    Added(Task),
     Update(Task),
     FetchCompleted(ProjectTasks),
     FetchFailed,
@@ -99,13 +100,15 @@ impl Project {
 
         let task = FetchService::fetch(
             req,
-            self.link.callback(|res: Response<Result<String, Error>>| {
-                if res.status().is_success() {
-                    Msg::Added
-                } else {
+            self.link
+                .callback(|res: Response<Json<Result<Task, anyhow::Error>>>| {
+                    if let (meta, Json(Ok(body))) = res.into_parts() {
+                        if meta.status.is_success() {
+                            return Msg::Added(body);
+                        }
+                    }
                     Msg::FetchFailed
-                }
-            }),
+                }),
         )
         .map_err(|_| JsValue::from("Failed to send post request for adding task"))?;
 
@@ -134,7 +137,13 @@ impl Component for Project {
             Msg::Add => self
                 .add_task()
                 .unwrap_or_else(|err| ConsoleService::error(&err.as_string().unwrap())),
-            Msg::Added => self.fetch_tasks(),
+            Msg::Added(task) => {
+                self.tasks = Some(match self.tasks.clone() {
+                    Some(t) => t.into_iter().chain(iter::once(task)).collect(),
+                    None => vec![task],
+                });
+                return true;
+            }
             Msg::Update(task) => ConsoleService::log(&format!("Should be updating {}", task.title)),
             Msg::FetchCompleted(tasks) => {
                 self.title = tasks.project_name;

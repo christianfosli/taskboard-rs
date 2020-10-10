@@ -2,6 +2,7 @@ use taskboard_core_lib::{commands::CreateTaskCommand, Status, Task};
 use warp::{
     hyper::StatusCode,
     reject::{self, Reject},
+    reply::{self, with_status},
     Rejection, Reply,
 };
 
@@ -31,7 +32,8 @@ pub async fn handle_task_create(
         })?;
 
     info!("Task {} created successfully", number);
-    Ok(StatusCode::CREATED)
+
+    Ok(with_status(reply::json(&task), StatusCode::CREATED))
 }
 
 #[derive(Clone, Debug)]

@@ -2,7 +2,8 @@ use warp::{Filter, Rejection, Reply};
 
 use crate::{
     handlers::create_project::handle_create_project, handlers::get_project::handle_get_project,
-    handlers::health::handle_health, store::with_store, store::ProjectStore,
+    handlers::health::handle_health, handlers::increment_counter::handle_increment_counter,
+    store::with_store, store::ProjectStore,
 };
 
 pub fn health_check_route<T: ProjectStore + Clone + Sync + Send>(
@@ -21,10 +22,15 @@ pub fn project_routes<T: ProjectStore + Clone + Sync + Send>(
         .and(with_store(store.clone()))
         .and_then(|id, store| handle_get_project(store, id));
 
+    let increment_counter = warp::path!(String / "increment-counter")
+        .and(warp::post())
+        .and(with_store(store.clone()))
+        .and_then(|id, store| handle_increment_counter(store, id));
+
     let create = warp::post()
         .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(handle_create_project);
 
-    get.or(create)
+    get.or(create).or(increment_counter)
 }

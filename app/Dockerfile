@@ -13,6 +13,6 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm --out-dir ./static
 
 FROM nginx AS final
+COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /usr/src/app/static /usr/share/nginx/html
-COPY nginx-wasm-mime-type.conf /etc/nginx/conf.d/nginx-wasm-mime-type.conf
 EXPOSE 80

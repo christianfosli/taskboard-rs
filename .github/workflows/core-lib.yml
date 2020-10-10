@@ -4,17 +4,17 @@ on:
   push:
     branches: [master]
     paths:
-      - core/**
+      - core-lib/**
       - .github/workflows/core-lib.yml
   pull_request:
     branches: [master]
     paths:
-      - core/**
+      - core-lib/**
       - .github/workflows/core-lib.yml
 
 defaults:
   run:
-    working-directory: core
+    working-directory: core-lib
 
 jobs:
   test:

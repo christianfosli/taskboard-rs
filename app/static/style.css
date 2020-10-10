@@ -1,3 +1,13 @@
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
 h1 {
   text-align: center;
 }
@@ -15,4 +25,15 @@ ul {
 
 li.todo {
   background-color: yellow;
+}
+
+footer {
+ padding: 0.3rem;
+  font: small-caption;
+  color: white;
+  background-color: darkslategray;
+}
+
+footer a {
+  color: lightblue;
 }

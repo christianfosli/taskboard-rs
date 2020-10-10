@@ -13,7 +13,8 @@ use yew::{
     web_sys,
 };
 
-const API_URL: Option<&'static str> = option_env!("API_URL");
+const TASK_SERVICE_URL: Option<&'static str> = option_env!("TASK_SERVICE_URL");
+const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
 pub struct Model {
     link: ComponentLink<Self>,
@@ -42,7 +43,7 @@ impl Model {
     fn fetch_tasks(&mut self) {
         self.fetch_status = FetchStatus::Loading;
 
-        match API_URL {
+        match TASK_SERVICE_URL {
             Some(url) => {
                 let req = Request::get(&format!("{}/project-tasks/{}", url, self.project_id))
                     .body(Nothing)
@@ -61,7 +62,7 @@ impl Model {
 
                 self.ft = Some(FetchService::fetch(req, callback).unwrap());
             }
-            None => ConsoleService::error("Unable to fetch tasks because API_URL is not set"),
+            None => ConsoleService::error("Unable to fetch tasks because the URL is not set"),
         }
     }
 
@@ -91,7 +92,7 @@ impl Model {
             estimate,
         };
 
-        let req = Request::post(&format!("{}/task", API_URL.unwrap()))
+        let req = Request::post(&format!("{}/task", TASK_SERVICE_URL.unwrap()))
             .header("Content-Type", "application/json")
             .body(Json(&command))
             .map_err(|_| JsValue::from("Failed to build post request"))?;

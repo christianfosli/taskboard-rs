@@ -4,7 +4,8 @@ services:
     build:
       context: ./app
       args:
-        API_URL: http://localhost:8000
+        TASK_SERVICE_URL: http://localhost:8000
+        PROJECT_SERVICE_URL: http://localhost:8001
         BUILD_PROFILE: dev
     ports:
       - "80:80"

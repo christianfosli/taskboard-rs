@@ -19,7 +19,11 @@ spec:
         backend:
           serviceName: taskboard-app-svc
           servicePort: 80
-      - path: /api(/|$)(.*)
+      - path: /task(/|$)(.*)
         backend:
-          serviceName: taskboard-api-svc
+          serviceName: taskboard-task-svc
+          servicePort: 80
+      - path: /project(/|$)(.*)
+        backend:
+          serviceName: taskboard-project-svc
           servicePort: 80

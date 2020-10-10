@@ -22,3 +22,10 @@ pub struct UpdateTaskCommand {
     /// The updated task
     pub updated_task: Task,
 }
+
+/// Command for creating a new project
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CreateProjectCommand {
+    /// The name of the project
+    pub name: String,
+}

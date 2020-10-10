@@ -9,10 +9,12 @@
 
 A Kanban inspired board for managing tasks/todo's and tracking progress.
 
-The purpose of this application is mostly for me to play with web development
-with rust, docker, kubernetes and elasticsearch.
+This application is mostly a proof-of-concept of full-stack development with
+Rust.
+It's also a nice chance for me to play with rust, docker, kubernetes and
+elasticsearch.
 
-Elasticsearch might be a weird choice to persist the to-do items.
+Elasticsearch might be a weird choice for persisting data.
 I chose it simply to learn more about it.
 
 ## Development
@@ -22,7 +24,8 @@ I chose it simply to learn more about it.
 * Docker and preferably docker-compose
 
 * Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
-  for docker and docker-compose, to reduce compile times:
+  for docker and docker-compose.
+  This is required because the Dockerfiles are using buildkit features for caching rust compilations.
 
   ```sh
   . enable_buildkit.sh

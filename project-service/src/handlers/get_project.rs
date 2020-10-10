@@ -11,7 +11,7 @@ pub async fn handle_get_project(
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
     let project_id =
-        Uuid::parse_str(&project_id).map_err(|e| reject::custom(ValidationError {}))?;
+        Uuid::parse_str(&project_id).map_err(|_| reject::custom(ValidationError {}))?;
 
     match store
         .get(&project_id)

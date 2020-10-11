@@ -2,10 +2,12 @@
   display: flex;
   min-height: 100vh;
   flex-direction: column;
+  margin: 0;
 }
 
 main {
   flex: 1;
+  padding: 0.5rem;
 }
 
 h1 {
@@ -28,7 +30,7 @@ li.todo {
 }
 
 footer {
- padding: 0.3rem;
+ padding: 0.5rem;
   font: small-caption;
   color: white;
   background-color: darkslategray;

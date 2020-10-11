@@ -42,3 +42,5 @@ spec:
             secretKeyRef:
               name: taskboard-es-elastic-user
               key: elastic
+        - name: PROJECT_SERVICE_URL
+          value: http://project-svc

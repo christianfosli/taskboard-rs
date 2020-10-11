@@ -20,6 +20,7 @@ services:
       ELASTIC_USERNAME: elastic
       ELASTIC_PASSWORD: secret
       ELASTIC_URL: http://es:9200
+      PROJECT_SERVICE_URL: http://projectsvc
   projectsvc:
     build:
       context: ./project-service

@@ -1489,6 +1489,7 @@ dependencies = [
  "elasticsearch",
  "log 0.4.11",
  "pretty_env_logger",
+ "reqwest",
  "serde",
  "serde_json",
  "taskboard-core-lib",

@@ -1,5 +1,7 @@
 use yew::{html, Component, ComponentLink};
 
+use crate::components::{create_project::CreateProject, search_project::SearchProject};
+
 pub struct Home {
     link: ComponentLink<Self>,
 }
@@ -28,10 +30,8 @@ impl Component for Home {
             <>
             <h1>{ "Taskboard" }</h1>
             <p>{ "Work-in-progress application for managing tasks and tracking progress." }</p>
-            <p>
-             { "It is not yet possible to create projects or search for projects in the UI...
-                Use the project-service REST API, then enter /{project-id} to manage tasks for it." }
-            </p>
+            < SearchProject />
+            < CreateProject />
             </>
         }
     }

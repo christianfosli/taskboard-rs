@@ -61,7 +61,7 @@ impl Project {
                     },
                 );
 
-                self.ft = Some(FetchService::fetch(req, callback).unwrap());
+                self.ft = FetchService::fetch(req, callback).ok();
             }
             None => ConsoleService::error("Unable to fetch tasks because the URL is not set"),
         }

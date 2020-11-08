@@ -72,8 +72,39 @@ impl ProjectStore for Elasticsearch {
         }
     }
 
-    async fn search(&self, _name: &str) -> Result<Vec<taskboard_core_lib::Project>, Error> {
-        todo!("search not yet implemented")
+    async fn search(&self, name: &str) -> Result<Vec<taskboard_core_lib::Project>, Error> {
+        let res = self
+            .search(SearchParts::Index(&[INDEX]))
+            .body(json!({
+                "query": {
+                    "match": {
+                        "name": name,
+                    }
+                }
+            }))
+            .send()
+            .await?;
+
+        match res.status_code() {
+            StatusCode::OK => {
+                let response_body = res.json::<Value>().await?;
+                let matches = response_body["hits"]["hits"]
+                    .as_array()
+                    .ok_or(anyhow!("res has no hits array"))?
+                    .into_iter()
+                    .map(|p| {
+                        serde_json::from_value::<Project>(p["_source"].clone())
+                            .expect("project not mappable")
+                    })
+                    .collect();
+                return Ok(matches);
+            }
+            StatusCode::NOT_FOUND => Ok(Vec::new()),
+            _ => {
+                res.error_for_status_code_ref()?;
+                unreachable!("unexpected result from elasticsearch");
+            }
+        }
     }
 
     async fn persist(&self, project: &Project) -> Result<(), Error> {

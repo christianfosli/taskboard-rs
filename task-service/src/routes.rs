@@ -1,6 +1,8 @@
 use warp::{Filter, Rejection, Reply};
 
 use crate::{
+    handlers::task_completed::handle_task_completed,
+    handlers::task_started::handle_task_started,
     handlers::{
         health::handle_health,
         task_create::{claim_task_number, handle_task_create},
@@ -27,18 +29,30 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
         .and(with_store(store.clone()))
         .and_then(|id, store| handle_task_list(store, id));
 
-    let create = warp::path!("task")
+    let create = warp::path!("task/create")
         .and(warp::post())
         .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(|store, command| handle_task_create(store, claim_task_number, command));
 
-    let update = warp::path!("task")
+    let update = warp::path!("task/update")
         .and(warp::put())
         .and(warp::body::json())
         .and_then(handle_task_update);
 
-    get.or(create).or(update)
+    let start = warp::path!("task/start")
+        .and(warp::post())
+        .and(with_store(store.clone()))
+        .and(warp::body::json())
+        .and_then(handle_task_started);
+
+    let complete = warp::path!("task/complete")
+        .and(warp::post())
+        .and(with_store(store.clone()))
+        .and(warp::body::json())
+        .and_then(handle_task_completed);
+
+    get.or(create).or(update).or(start).or(complete)
 }
 
 #[cfg(test)]
@@ -68,6 +82,12 @@ mod tests {
             match self.success {
                 true => Ok(vec![Task::new(1, "mock")]),
                 false => Err(anyhow!("MockTaskStoreError: Could not fetch")),
+            }
+        }
+        async fn get(&self, _: &Uuid, _: usize) -> Result<Option<Task>, Error> {
+            match self.success {
+                true => Ok(Some(Task::new(1, "mock"))),
+                false => Err(anyhow!("MockTaskStoreError: Could not get")),
             }
         }
         async fn persist(&self, _: &Uuid, _: &Task) -> Result<(), Error> {

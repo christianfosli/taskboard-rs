@@ -71,6 +71,43 @@ impl TaskStore for Elasticsearch {
         }
     }
 
+    async fn get(&self, project_id: &Uuid, task_number: usize) -> Result<Option<Task>, Error> {
+        let res = self
+            .search(SearchParts::Index(&[&format!("task-{}", project_id)]))
+            .body(json!({
+                "query": {
+                    "ids": {
+                        "values": [
+                            task_number,
+                        ]
+                    }
+                }
+            }))
+            .send()
+            .await?;
+
+        match res.status_code() {
+            StatusCode::OK => {
+                let response_body = res.json::<Value>().await?;
+                let task = response_body["hits"]["hits"]
+                    .as_array()
+                    .ok_or(anyhow!("res has no hits array"))?
+                    .first()
+                    .and_then(|t| serde_json::from_value::<Task>(t["_source"].clone()).ok());
+
+                return Ok(task);
+            }
+            StatusCode::NOT_FOUND => {
+                return Ok(None);
+            }
+            _ => Err(anyhow!(
+                "An unexpected error occured while trying to get task {:?} {:?}",
+                project_id,
+                task_number
+            )),
+        }
+    }
+
     async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error> {
         let res = self
             .index(IndexParts::IndexId(

@@ -5,7 +5,7 @@ authors = ["Christian Fosli <cfosli@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-taskboard-core-lib = "0.1.6"
+taskboard-core-lib = "0.1.9"
 tokio = { version = "0.2", features = ["full"] }
 warp = "0.2"
 elasticsearch = "7.9.0-alpha.1"

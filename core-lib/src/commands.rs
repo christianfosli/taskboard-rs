@@ -23,6 +23,24 @@ pub struct UpdateTaskCommand {
     pub updated_task: Task,
 }
 
+/// Command for updating the status of a task to reflect work has started
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct StartTaskCommand {
+    /// Id for the project that the task is a part of
+    pub project_id: Uuid,
+    /// Task number identifying the task
+    pub task_number: usize,
+}
+
+/// Command for updating the status of a task to completed
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct CompleteTaskCommand {
+    /// Id for the project that the task is a part of
+    pub project_id: Uuid,
+    /// Task number identifying the task
+    pub task_number: usize,
+}
+
 /// Command for creating a new project
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CreateProjectCommand {

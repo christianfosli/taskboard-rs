@@ -4,11 +4,12 @@ use std::future::Future;
 use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, Project, Status, Task};
 use warp::{
     hyper::StatusCode,
-    reject::{self, Reject},
+    reject,
     reply::{self, with_status},
     Rejection, Reply,
 };
 
+use crate::errors::PersistError;
 use crate::store::TaskStore;
 
 pub async fn handle_task_create<Fut>(
@@ -23,7 +24,7 @@ where
 
     let number = claim_task_number(command.project_id).await.map_err(|e| {
         error!("Unable to claim task number: {:?}", e);
-        reject::custom(TaskPersistError {
+        reject::custom(PersistError {
             reason: String::from("Unable to claim task number"),
         })
     })?;
@@ -40,7 +41,7 @@ where
         .await
         .map_err(|e| {
             error!("Unable to persist task {:?}: {:?}", task, e);
-            reject::custom(TaskPersistError {
+            reject::custom(PersistError {
                 reason: String::from("Unable to persist to store"),
             })
         })?;
@@ -66,9 +67,3 @@ pub async fn claim_task_number(project_id: Uuid) -> Result<usize, anyhow::Error>
 
     Ok(response.task_conter)
 }
-
-#[derive(Clone, Debug)]
-struct TaskPersistError {
-    reason: String,
-}
-impl Reject for TaskPersistError {}

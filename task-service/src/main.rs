@@ -2,6 +2,7 @@ use warp::Filter;
 #[macro_use]
 extern crate log;
 mod cors;
+mod errors;
 mod handlers;
 mod routes;
 mod store;

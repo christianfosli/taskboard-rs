@@ -11,5 +11,5 @@ crate-type = ["cdylib", "rlib"]
 yew = "0.17"
 yew-router = "0.14"
 wasm-bindgen = "0.2.67"
-taskboard-core-lib = "0.1.8"
+taskboard-core-lib = "0.1.9"
 anyhow = "1.0"

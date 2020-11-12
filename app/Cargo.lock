@@ -531,9 +531,9 @@ dependencies = [
 
 [[package]]
 name = "taskboard-core-lib"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18fc4c28ba01bb1f78560ca8f4f5acdbcc6a1e004c767b1a323c958be218fcc0"
+checksum = "2cda34058897864f7277bc46611180dbd79e49922b14bba024e05f84168d9e24"
 dependencies = [
  "serde",
  "uuid",

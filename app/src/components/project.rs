@@ -1,6 +1,10 @@
 use std::iter;
 
-use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, ProjectTasks, Task};
+use taskboard_core_lib::{
+    commands::{CreateTaskCommand, UpdateTaskCommand},
+    uuid::Uuid,
+    ProjectTasks, Task,
+};
 use wasm_bindgen::JsValue;
 use yew::{
     format::Json, format::Nothing, html, prelude::*, services::fetch::FetchTask,
@@ -31,6 +35,7 @@ pub enum Msg {
     Add,
     Added(Task),
     Update(Task),
+    UpdateSuccessful,
     FetchCompleted(ProjectTasks),
     FetchFailed,
 }
@@ -93,26 +98,47 @@ impl Project {
             estimate,
         };
 
-        let req = Request::post(&format!("{}/task", TASK_SERVICE_URL.unwrap()))
+        let req = Request::post(&format!("{}/task/create", TASK_SERVICE_URL.unwrap()))
             .header("Content-Type", "application/json")
             .body(Json(&command))
             .map_err(|_| JsValue::from("Failed to build post request"))?;
 
-        let task = FetchService::fetch(
-            req,
-            self.link
-                .callback(|res: Response<Json<Result<Task, anyhow::Error>>>| {
-                    if let (meta, Json(Ok(body))) = res.into_parts() {
-                        if meta.status.is_success() {
-                            return Msg::Added(body);
-                        }
+        let callback = self
+            .link
+            .callback(|res: Response<Json<Result<Task, anyhow::Error>>>| {
+                if let (meta, Json(Ok(body))) = res.into_parts() {
+                    if meta.status.is_success() {
+                        return Msg::Added(body);
                     }
-                    Msg::FetchFailed
-                }),
-        )
-        .map_err(|_| JsValue::from("Failed to send post request for adding task"))?;
+                }
+                Msg::FetchFailed
+            });
 
-        self.ft = Some(task);
+        self.ft = FetchService::fetch(req, callback).ok();
+
+        Ok(())
+    }
+
+    fn update_task(&mut self, task: &Task) -> Result<(), anyhow::Error> {
+        let command = UpdateTaskCommand {
+            project_id: self.id,
+            updated_task: task.clone(),
+        };
+
+        let req = Request::put(&format!("{}/task/update", TASK_SERVICE_URL.unwrap()))
+            .header("Content-Type", "application/json")
+            .body(Json(&command))?;
+
+        let callback = self
+            .link
+            .callback(|res: Response<Result<String, anyhow::Error>>| {
+                match res.status().is_success() {
+                    true => Msg::UpdateSuccessful,
+                    false => Msg::FetchFailed,
+                }
+            });
+
+        self.ft = FetchService::fetch(req, callback).ok();
 
         Ok(())
     }
@@ -142,30 +168,48 @@ impl Component for Project {
                     Some(t) => t.into_iter().chain(iter::once(task)).collect(),
                     None => vec![task],
                 });
-                return true;
             }
-            Msg::Update(task) => ConsoleService::log(&format!("Should be updating {}", task.title)),
+            Msg::Update(task) => {
+                self.update_task(&task)
+                    .unwrap_or_else(|e| ConsoleService::error(&format!("{}", e)));
+
+                self.tasks = Some(
+                    self.tasks
+                        .clone()
+                        .unwrap_or(Vec::new())
+                        .into_iter()
+                        .map(|t| {
+                            if t.number == task.number {
+                                task.clone()
+                            } else {
+                                t
+                            }
+                        })
+                        .collect(),
+                )
+            }
+            Msg::UpdateSuccessful => {
+                ConsoleService::log("Task successfully updated!");
+            }
             Msg::FetchCompleted(tasks) => {
                 self.title = tasks.project_name;
                 self.tasks = Some(tasks.tasks);
                 self.fetch_status = FetchStatus::Completed;
-                return true;
             }
             Msg::FetchFailed => {
                 self.fetch_status = FetchStatus::Failed;
-                return true;
             }
         }
-        false
+        true
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        ConsoleService::log("App changed");
+        ConsoleService::log("Project changed? Not re-rendering");
         false
     }
 
     fn rendered(&mut self, first_render: bool) {
-        ConsoleService::log("App rendered");
+        ConsoleService::log("Project rendered");
         if first_render {
             self.fetch_tasks();
         }

@@ -2,17 +2,17 @@ use warp::reject::Reject;
 
 #[derive(Clone, Debug)]
 pub struct PersistError {
-    reason: String,
+    pub reason: String,
 }
 
 #[derive(Clone, Debug)]
 pub struct FetchError {
-    reason: String,
+    pub reason: String,
 }
 
 #[derive(Clone, Debug)]
 pub struct ValidationError {
-    reason: String,
+    pub reason: String,
 }
 
 impl Reject for PersistError {}

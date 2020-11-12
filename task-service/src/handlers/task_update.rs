@@ -1,10 +1,22 @@
 use taskboard_core_lib::commands::UpdateTaskCommand;
-use warp::{hyper::StatusCode, Rejection, Reply};
+use warp::{hyper::StatusCode, reject, Rejection, Reply};
 
-pub async fn handle_task_update(command: UpdateTaskCommand) -> Result<impl Reply, Rejection> {
-    info!("Pretending handle {:?}", command);
+use crate::{errors::PersistError, store::TaskStore};
 
-    // TODO: Persist with new data
+pub async fn handle_task_update(
+    store: impl TaskStore,
+    command: UpdateTaskCommand,
+) -> Result<impl Reply, Rejection> {
+    info!("Update task: {:?}", command);
+
+    store
+        .persist(&command.project_id, &command.updated_task)
+        .await
+        .map_err(|e| {
+            reject::custom(PersistError {
+                reason: format!("{}", e),
+            })
+        })?;
 
     Ok(StatusCode::OK)
 }

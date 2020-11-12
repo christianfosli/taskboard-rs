@@ -29,24 +29,25 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
         .and(with_store(store.clone()))
         .and_then(|id, store| handle_task_list(store, id));
 
-    let create = warp::path!("task/create")
+    let create = warp::path!("task" / "create")
         .and(warp::post())
         .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(|store, command| handle_task_create(store, claim_task_number, command));
 
-    let update = warp::path!("task/update")
+    let update = warp::path!("task" / "update")
         .and(warp::put())
+        .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(handle_task_update);
 
-    let start = warp::path!("task/start")
+    let start = warp::path!("task" / "start")
         .and(warp::post())
         .and(with_store(store.clone()))
         .and(warp::body::json())
         .and_then(handle_task_started);
 
-    let complete = warp::path!("task/complete")
+    let complete = warp::path!("task" / "complete")
         .and(warp::post())
         .and(with_store(store.clone()))
         .and(warp::body::json())
@@ -61,7 +62,10 @@ mod tests {
     use anyhow::{anyhow, Error};
     use async_trait::async_trait;
     use taskboard_core_lib::{
-        commands::CreateTaskCommand, commands::UpdateTaskCommand, uuid::Uuid, Status, Task,
+        commands::CreateTaskCommand,
+        commands::{CompleteTaskCommand, StartTaskCommand, UpdateTaskCommand},
+        uuid::Uuid,
+        Status, Task,
     };
     use warp::hyper::StatusCode;
 
@@ -138,7 +142,7 @@ mod tests {
 
         let res = warp::test::request()
             .method("POST")
-            .path("/task")
+            .path("/task/create")
             .json(&CreateTaskCommand {
                 title: "created test-task".into(),
                 project_id: Uuid::new_v4(),
@@ -157,7 +161,7 @@ mod tests {
 
         let res = warp::test::request()
             .method("PUT")
-            .path("/task")
+            .path("/task/update")
             .json(&UpdateTaskCommand {
                 project_id: Uuid::new_v4(),
                 updated_task: Task {
@@ -166,6 +170,42 @@ mod tests {
                     status: Status::Doing,
                     remaining_work: Some(5),
                 },
+            })
+            .reply(&routes)
+            .await;
+
+        assert_eq!(StatusCode::OK, res.status());
+    }
+
+    #[tokio::test]
+    async fn start_task_should_be_ok() {
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
+
+        let res = warp::test::request()
+            .method("POST")
+            .path("/task/start")
+            .json(&StartTaskCommand {
+                project_id: Uuid::new_v4(),
+                task_number: 2,
+            })
+            .reply(&routes)
+            .await;
+
+        assert_eq!(StatusCode::OK, res.status());
+    }
+
+    #[tokio::test]
+    async fn complete_task_should_be_ok() {
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
+
+        let res = warp::test::request()
+            .method("POST")
+            .path("/task/complete")
+            .json(&CompleteTaskCommand {
+                project_id: Uuid::new_v4(),
+                task_number: 2,
             })
             .reply(&routes)
             .await;

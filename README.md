@@ -9,6 +9,8 @@
 
 A Kanban inspired board for managing tasks/todo's and tracking progress.
 
+Visit [https://taskboard.cloud](https://taskboard.cloud) to try it out!
+
 This application is mostly a proof-of-concept of full-stack development with
 Rust.
 It's also a nice chance for me to play with rust, docker, kubernetes and

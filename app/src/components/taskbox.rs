@@ -30,10 +30,19 @@ impl Component for TaskBox {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::StatusChanged(status) => self.onchange.emit(Task {
-                status,
-                ..self.data.clone()
-            }),
+            Msg::StatusChanged(status) => {
+                let remaining_work = match status {
+                    Status::Done => Some(0),
+                    Status::Doing if self.data.status == Status::Done => None,
+                    _ => self.data.remaining_work,
+                };
+
+                self.onchange.emit(Task {
+                    status,
+                    remaining_work,
+                    ..self.data.clone()
+                })
+            }
         }
         false
     }
@@ -47,16 +56,30 @@ impl Component for TaskBox {
     fn view(&self) -> Html {
         let rem_work = match self.data.remaining_work {
             Some(hours) => format!("rem: {} hrs", hours),
-            None => String::from(""),
+            None => String::from("rem: ?"),
         };
+
+        let action = match self.data.status {
+            Status::Todo => html! {
+                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "Do -->" }</button>
+            },
+            Status::Doing => html! {
+                <>
+                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Todo))>{ "<-- Not doing" }</button>
+                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Done))>{ "Done -->" }</button>
+                </>
+            },
+            Status::Done => html! {
+                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "<-- Not done" }</button>
+            },
+        };
+
         html! {
             <li class="todo">
                 <h3>{ &self.data.title }</h3>
                 <p class="status">{ format!("status: {:?}", self.data.status) }</p>
                 <p>{rem_work}</p>
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Todo))>{ "Todo" }</button>
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "Do" }</button>
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Done))>{ "Done" }</button>
+                {action}
             </li>
         }
     }

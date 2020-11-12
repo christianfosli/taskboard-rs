@@ -14,7 +14,7 @@ const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_U
 pub struct SearchProject {
     link: ComponentLink<Self>,
     search_query: String,
-    matches: Vec<Project>,
+    matches: Option<Vec<Project>>,
     ft: Option<FetchTask>,
 }
 
@@ -30,11 +30,11 @@ impl Component for SearchProject {
 
     type Properties = ();
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             link,
             search_query: String::from(""),
-            matches: Vec::new(),
+            matches: None,
             ft: None,
         }
     }
@@ -43,6 +43,8 @@ impl Component for SearchProject {
         match msg {
             Msg::SetSearch(query) => self.search_query = query,
             Msg::PerformSearch => {
+                self.matches = None;
+
                 let req = Request::get(format!(
                     "{}/search/{}",
                     PROJECT_SERVICE_URL.unwrap(),
@@ -64,7 +66,7 @@ impl Component for SearchProject {
 
                 self.ft = FetchService::fetch(req, callback).ok();
             }
-            Msg::SearchCompleted(matches) => self.matches = matches,
+            Msg::SearchCompleted(matches) => self.matches = Some(matches),
             Msg::SearchFailed(message) => ConsoleService::error(&message),
         }
         true
@@ -88,7 +90,19 @@ impl Component for SearchProject {
             }
         };
 
-        let matches = self.matches.iter().map(|p| to_li(p)).collect::<Html>();
+        let matches = match self.matches.clone() {
+            None => html! {},
+            Some(m) if m.len() == 0 => html! {<p>{ "No matches" }</p>},
+            Some(m) => {
+                let matches = m.iter().map(|p| to_li(p)).collect::<Html>();
+
+                html! {
+                    <ul>
+                    {matches}
+                    </ul>
+                }
+            }
+        };
 
         html! {
             <>
@@ -98,9 +112,7 @@ impl Component for SearchProject {
                 <input type="text" id="search-project-field" name="query" value={&self.search_query} oninput={handle_input} required={true}/>
                 <input type="submit" value="Search"/>
             </form>
-            <ul>
-                {matches}
-            </ul>
+            {matches}
             </>
         }
     }

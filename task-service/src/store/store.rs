@@ -9,6 +9,7 @@ use warp::Filter;
 pub trait TaskStore {
     async fn ping(&self) -> Result<(), Error>;
     async fn fetch_tasks(&self, project_id: &Uuid) -> Result<Vec<Task>, Error>;
+    async fn get(&self, project_id: &Uuid, task_number: usize) -> Result<Option<Task>, Error>;
     async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error>;
 }
 

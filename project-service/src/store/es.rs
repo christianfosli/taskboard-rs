@@ -77,7 +77,7 @@ impl ProjectStore for Elasticsearch {
             .search(SearchParts::Index(&[INDEX]))
             .body(json!({
                 "query": {
-                    "match": {
+                    "fuzzy": {
                         "name": name,
                     }
                 }

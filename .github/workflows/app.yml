@@ -29,6 +29,7 @@ jobs:
       - name: build
         run: |
           docker build \
+            --build-arg VERSION="$(git rev-parse --short HEAD)" \
             -t christianfosli/taskboard-app:"$GITHUB_SHA" \
             -t christianfosli/taskboard-app:latest .
         env:

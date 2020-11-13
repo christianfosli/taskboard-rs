@@ -209,7 +209,6 @@ impl Component for Project {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        ConsoleService::log("Project rendered");
         if first_render {
             self.fetch_tasks();
         }

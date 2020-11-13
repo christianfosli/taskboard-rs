@@ -1,4 +1,6 @@
-use taskboard_core_lib::{uuid::Uuid, ProjectTasks};
+use std::env;
+
+use taskboard_core_lib::{uuid::Uuid, Project, ProjectTasks};
 use warp::{reject, Rejection, Reply};
 
 use crate::{
@@ -13,13 +15,16 @@ pub async fn handle_task_list(
     info!("Finding tasks associated to project {}", project_id);
 
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
-        error!("Unable to parse {} to Uuid: {:?}", project_id, e);
         reject::custom(ValidationError {
-            reason: String::from("Invalid project id"),
+            reason: format!("Invalid project id: {}", e),
         })
     })?;
 
-    let project_name = String::from("Dummy Project"); // TODO: Get name of project with this id
+    let project_name = fetch_project_name(&project_id).await.unwrap_or_else(|e| {
+        error!("Could not get project name from project service: {}", e);
+        warn!("Returning blank project name");
+        String::from("")
+    });
 
     let tasks = store.fetch_tasks(&project_id).await.map_err(|e| {
         error!("Unable to fetch tasks for project {}: {:?}", project_id, e);
@@ -32,4 +37,17 @@ pub async fn handle_task_list(
         project_name,
         tasks,
     }))
+}
+
+async fn fetch_project_name(project_id: &Uuid) -> Result<String, anyhow::Error> {
+    let project = reqwest::get(&format!(
+        "{}/{}",
+        env::var("PROJECT_SERVICE_URL")?,
+        project_id,
+    ))
+    .await?
+    .json::<Project>()
+    .await?;
+
+    Ok(project.name)
 }

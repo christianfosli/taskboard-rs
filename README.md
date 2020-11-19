@@ -38,3 +38,10 @@ I chose it simply to learn more about it.
 ```sh
 docker-compose up -d --build
 ```
+
+## Metrics and Monitoring
+
+Metrics from Prometheus are available through Grafana at
+[https://taskboard.cloud/grafana](https://taskboard.cloud/grafana).
+
+These are password protected.

@@ -1,0 +1,6 @@
+# Overrides for kube-prometheus-stack.
+
+grafana:
+  grafana.ini:
+    server:
+      root_url: https://taskboard.cloud/grafana

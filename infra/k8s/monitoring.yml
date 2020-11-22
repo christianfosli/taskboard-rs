@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prom-monitor-ingress
+  labels:
+    app: ingress-nginx
+    # kube-prometheus-stack helm operator configures prometheus to only look
+    # for ServiceMonitor/PodMonitor tagged with their release name
+    release: prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+  endpoints:
+  - port: metrics

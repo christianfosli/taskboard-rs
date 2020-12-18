@@ -6,9 +6,10 @@ spec:
   selector:
     app: project
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: 80
-    targetPort: 80
+    targetPort: http
 
 ---
 apiVersion: apps/v1
@@ -18,7 +19,6 @@ metadata:
   labels:
     app: project
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: project
@@ -31,7 +31,24 @@ spec:
       - name: project
         image: christianfosli/taskboard-project-service
         ports:
-        - containerPort: 80
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        resources:
+          requests:
+            memory: 10Mi
+            cpu: 10m
+          limits:
+            memory: 100Mi
+            cpu: 100m
         env:
         - name: ELASTIC_URL
           value: https://taskboard-es-http:9200
@@ -42,3 +59,29 @@ spec:
             secretKeyRef:
               name: taskboard-es-elastic-user
               key: elastic
+
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: project-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: project-deploy
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

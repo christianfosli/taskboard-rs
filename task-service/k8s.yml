@@ -6,7 +6,8 @@ spec:
   selector:
     app: task
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: 80
     targetPort: 80
 
@@ -18,7 +19,6 @@ metadata:
   labels:
     app: task
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: task
@@ -31,7 +31,24 @@ spec:
       - name: task
         image: christianfosli/taskboard-task-service
         ports:
-        - containerPort: 80
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        resources:
+          requests:
+            memory: 10Mi
+            cpu: 10m
+          limits:
+            memory: 100Mi
+            cpu: 100m
         env:
         - name: ELASTIC_URL
           value: https://taskboard-es-http:9200
@@ -44,3 +61,29 @@ spec:
               key: elastic
         - name: PROJECT_SERVICE_URL
           value: http://project-svc
+
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: task-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: task-deploy
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

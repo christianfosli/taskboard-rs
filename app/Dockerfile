@@ -1,4 +1,3 @@
-# syntax = docker/dockerfile:1-experimental
 FROM rust:1.48 AS builder
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 WORKDIR /usr/src/app

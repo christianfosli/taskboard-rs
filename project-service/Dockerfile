@@ -1,4 +1,3 @@
-# syntax = docker/dockerfile:1-experimental
 FROM rust:1.48 as builder
 WORKDIR /usr/src/app
 ARG CARGO_INSTALL_OPTIONS

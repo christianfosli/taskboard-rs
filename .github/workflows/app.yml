@@ -21,11 +21,16 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: check if docker version is sufficient
+        run: |
+          if (( $(docker version --format '{{.Server.Version}}') < 20.10 )); then
+            echo ::set-env name=OLD_DOCKER::true
+          fi
       - name: install docker 20.10 if required
         uses: docker-practice/actions-setup-docker@v1
         with:
           docker_version: 20.10
-        if: (( $(docker version --format '{{.Server.Version}}') < 20.10 ))
+        if: env.OLD_DOCKER == 'true' 
       - name: login docker-hub
         run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
         env:

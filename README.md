@@ -25,7 +25,7 @@ I chose it simply to learn more about it.
 
 * Docker >= v20.10 and preferably docker-compose
 
-  * To use docker you'll need to add this to the top of the
+  * To use older versions of docker you'll need to add this to the top of the
     Dockerfiles
 
     ```Dockerfile

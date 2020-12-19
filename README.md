@@ -23,7 +23,14 @@ I chose it simply to learn more about it.
 
 ### Prerequisites
 
-* Docker and preferably docker-compose
+* Docker >= v20.10 and preferably docker-compose
+
+  * To use docker you'll need to add this to the top of the
+    Dockerfiles
+
+    ```Dockerfile
+    # syntax = docker/dockerfile:1-experimental
+    ```
 
 * Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
   for docker and docker-compose.

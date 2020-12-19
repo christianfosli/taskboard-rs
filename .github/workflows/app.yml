@@ -18,9 +18,14 @@ defaults:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: install docker 20.10 if required
+        uses: docker-practice/actions-setup-docker@v1
+        with:
+          docker_version: 20.10
+        if: (( $(docker version --format '{{.Server.Version}}') < 20.10 ))
       - name: login docker-hub
         run: echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
         env:
@@ -40,7 +45,7 @@ jobs:
           docker push christianfosli/taskboard-app:latest
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v2

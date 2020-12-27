@@ -1,5 +1,12 @@
 # Taskboard Infra
 
+Divided into two:
+
+* azure: Azure resources which are *not* managed by Kubernetes,
+  includes provisioning of Azure Kubernetes Service cluster
+
+* k8s: Resources/infrastructure that live inside the kubernetes cluster
+
 ## Prerequisites
 
 ### Running locally
@@ -18,11 +25,6 @@ manually if recreating infra from scratch
 
   * Set/update related environment variables (see pipeline).
 
-* Create a storage account and container, to keep Terraform's state
+* Create a storage account and containers, to keep Terraform's state
 
   * Check/update terraform/main.tf
-
-### Other manual steps
-
-The manifests in the k8s folder must be manually applied,
-using `kubectl apply`, or the applicable script, for now.

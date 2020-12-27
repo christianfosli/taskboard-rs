@@ -17,16 +17,15 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  TF_VAR_K8S_INGRESS_LB_PUBLIC_IP_ID: ${{ secrets.TF_VAR_K8S_INGRESS_LB_PUBLIC_IP_ID }}
-
-defaults:
-  run:
-    working-directory: infra/terraform
 
 jobs:
-  build-test-apply:
-    name: Build, test, apply unless PR-run
+  az:
+    name: "Azure Infra: Build, test, apply"
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: infra/azure/terraform/
+
     steps:
       - uses: actions/checkout@v2
       - name: Init
@@ -39,7 +38,36 @@ jobs:
           terraform show --json release.tfplan > ../testplan.json
       - name: Test
         run: docker run --rm -v "$(pwd):/target" eerkunt/terraform-compliance -f test -p testplan.json
-        working-directory: infra
+        working-directory: infra/azure
       - name: Apply
         run: terraform apply --input=false release.tfplan
-        if: github.event_name == 'push'
+
+  k8s:
+    name: "K8S cluster infra: Build, apply"
+    runs-on: ubuntu-20.04
+    needs: az
+    defaults:
+      run:
+        working-directory: infra/k8s/terraform/
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get AKS credentials
+        run: |
+          az login --service-principal -u "$CLIENT_ID" -p "$CLIENT_SECRET" --tenant "$TENANT_ID"
+          az account set -s "$SUBSCRIPTION"
+          az aks get-credentials -n aks-taskboard -g rg-taskboard
+        env:
+          CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Init terraform
+        run: |
+          terraform -v
+          terraform init --input=false
+      - name: Plan
+        run: |
+          terraform plan --input=false --refresh=true --lock=false --out "release.tfplan"
+      - name: Apply
+        run: terraform apply --input=false release.tfplan

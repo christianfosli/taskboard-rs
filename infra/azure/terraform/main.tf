@@ -5,9 +5,14 @@ terraform {
     container_name       = "tfstate"
     key                  = "prod.terraform.tfstate"
   }
+
+  required_providers {
+    azurerm = {
+      version = "~>2.41"
+    }
+  }
 }
 
 provider "azurerm" {
-  version = "~>2.5"
   features {}
 }

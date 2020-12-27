@@ -29,13 +29,6 @@ spec:
             name: project-svc
             port:
               number: 80
-      - path: /grafana(/|$)(.*)
-        pathType: Exact
-        backend:
-          service:
-            name: prometheus-stack-grafana
-            port:
-              number: 80
       - path: /()(.*)
         pathType: Exact
         backend:

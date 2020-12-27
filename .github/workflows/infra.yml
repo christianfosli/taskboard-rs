@@ -21,7 +21,7 @@ env:
 
 jobs:
   az:
-    name: Azure Infra: Build, test, apply
+    name: "Azure Infra: Build, test, apply"
     runs-on: ubuntu-20.04
     defaults:
       run:
@@ -39,13 +39,14 @@ jobs:
           terraform show --json release.tfplan > ../testplan.json
       - name: Test
         run: docker run --rm -v "$(pwd):/target" eerkunt/terraform-compliance -f test -p testplan.json
-        working-directory: infra
+        working-directory: infra/azure
       - name: Apply
         run: terraform apply --input=false release.tfplan
 
   k8s:
-    name: K8S cluster infra: Build, apply
+    name: "K8S cluster infra: Build, apply"
     runs-on: ubuntu-20.04
+    needs: az
     defaults:
       run:
         working-directory: infra/k8s/terraform/

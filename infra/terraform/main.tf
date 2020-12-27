@@ -16,8 +16,6 @@ terraform {
     }
 
     kubectl = {
-      # Replace with official kubernetes provider when alpha version
-      # with CRD support matures
       source  = "gavinbunney/kubectl"
       version = "~>1.9"
     }
@@ -26,4 +24,28 @@ terraform {
 
 provider "azurerm" {
   features {}
+}
+
+provider "helm" {
+  kubernetes {
+    load_config_file       = false
+    host                   = azurerm_kubernetes_cluster.k8s.kube_config.0.host
+    username               = azurerm_kubernetes_cluster.k8s.kube_config.0.username
+    password               = azurerm_kubernetes_cluster.k8s.kube_config.0.password
+    client_certificate     = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_certificate)
+    client_key             = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.cluster_ca_certificate)
+  }
+}
+
+provider "kubectl" {
+  # Replace with official kubernetes provider when alpha version
+  # with CRD support matures
+  load_config_file       = false
+  host                   = azurerm_kubernetes_cluster.k8s.kube_config.0.host
+  username               = azurerm_kubernetes_cluster.k8s.kube_config.0.username
+  password               = azurerm_kubernetes_cluster.k8s.kube_config.0.password
+  client_certificate     = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_certificate)
+  client_key             = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_key)
+  cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.cluster_ca_certificate)
 }

@@ -33,4 +33,4 @@ Feature: DNS and Custom Domain
     Given I have azurerm_dns_a_record defined
     When its address is azurerm_dns_a_record.record
     Then it must contain target_resource_id
-    And its value must match the "^.+kubernetes.+$" regex
+    And its value must match the "^.+aks-taskboard.+$" regex

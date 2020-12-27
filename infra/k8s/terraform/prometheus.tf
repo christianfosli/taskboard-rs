@@ -67,6 +67,6 @@ spec:
           service:
             name: prometheus-grafana
             port:
-              name: service
+              number: 80
 YAML
 }

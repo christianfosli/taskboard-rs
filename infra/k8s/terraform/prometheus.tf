@@ -41,4 +41,8 @@ spec:
   endpoints:
   - port: metrics
 YAML
+
+  depends_on = [
+    helm_release.prometheus
+  ]
 }

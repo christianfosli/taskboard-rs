@@ -25,7 +25,7 @@ defaults:
 
 jobs:
   build-test-apply:
-    name: Build, test, apply unless PR-run
+    name: Build, test, apply
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -42,4 +42,3 @@ jobs:
         working-directory: infra
       - name: Apply
         run: terraform apply --input=false release.tfplan
-        if: github.event_name == 'push'

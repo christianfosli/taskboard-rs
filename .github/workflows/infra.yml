@@ -53,9 +53,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Init
+      - name: Get AKS credentials
         run: |
+          az login --service-principal -u "$CLIENT_ID" -p "$CLIENT_SECRET" --tenant "$TENANT_ID"
+          az account set -s "$SUBSCRIPTION"
           az aks get-credentials -n aks-taskboard -g rg-taskboard
+        env:
+          CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Init terraform
+        run: |
           terraform -v
           terraform init --input=false
       - name: Plan

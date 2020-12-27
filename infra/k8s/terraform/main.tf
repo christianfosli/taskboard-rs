@@ -19,6 +19,10 @@ terraform {
       source  = "gavinbunney/kubectl"
       version = "~>1.9"
     }
+
+    kubernetes = {
+      version = "~>1.13"
+    }
   }
 }
 
@@ -36,6 +40,11 @@ provider "helm" {
 provider "kubectl" {
   # Replace with official kubernetes provider when alpha version
   # with CRD support matures
+  config_path    = "~/.kube/config"
+  config_context = "aks-taskboard"
+}
+
+provider "kubernetes" {
   config_path    = "~/.kube/config"
   config_context = "aks-taskboard"
 }

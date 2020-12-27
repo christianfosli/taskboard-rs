@@ -46,3 +46,27 @@ YAML
     helm_release.prometheus
   ]
 }
+
+resource "kubectl_manifest" "grafanaIngress" {
+  yaml_body = <<YAML
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: ${kubernetes_namespace.monitoring.metadata.0.name}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: taskboard.cloud
+    http:
+      - path: /grafana(/|$)(.*)
+        pathType: Exact
+        backend:
+          service:
+            name: prometheus-grafana
+            port:
+              name: service
+YAML
+}

@@ -61,6 +61,7 @@ spec:
   rules:
   - host: taskboard.cloud
     http:
+      paths:
       - path: /grafana(/|$)(.*)
         pathType: Exact
         backend:

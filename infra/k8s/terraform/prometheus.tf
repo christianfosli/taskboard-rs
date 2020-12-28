@@ -31,20 +31,18 @@ metadata:
   namespace: ${kubernetes_namespace.monitoring.metadata.0.name}
   labels:
     app: ingress-nginx
-    # kube-prometheus-stack helm operator configures prometheus to only look
-    # for ServiceMonitor/PodMonitor tagged with their release name
-    release: prometheus-stack
+    # kube-prometheus-stack helm chart configures prometheus such that
+    # ServiceMonitor/PodMonitor must be tagged with their release name
+    release: ${helm_release.prometheus.metadata.0.name}
 spec:
+  namespaceSelector:
+    any: true
   selector:
     matchLabels:
       app.kubernetes.io/name: ingress-nginx
   endpoints:
   - port: metrics
 YAML
-
-  depends_on = [
-    helm_release.prometheus
-  ]
 }
 
 resource "kubectl_manifest" "grafanaIngress" {

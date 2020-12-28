@@ -35,6 +35,8 @@ metadata:
     # ServiceMonitor/PodMonitor must be tagged with their release name
     release: ${helm_release.prometheus.metadata.0.name}
 spec:
+  namespaceSelector:
+    any: true
   selector:
     matchLabels:
       app.kubernetes.io/name: ingress-nginx

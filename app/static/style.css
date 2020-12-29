@@ -12,7 +12,7 @@ main {
   margin: auto;
 }
 
-h1 {
+h1,h2,h3 {
   text-align: center;
 }
 
@@ -31,8 +31,23 @@ li.todo {
   background-color: yellow;
 }
 
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header h1 {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+nav a {
+  margin: 0.5rem;
+}
+
 footer {
- padding: 0.5rem;
+  padding: 0.5rem;
   font: small-caption;
   color: white;
   background-color: darkslategray;

@@ -240,7 +240,7 @@ impl Component for Project {
 
         html! {
             <>
-            <h1>{ &format!("Taskboard for {}", self.title) }</h1>
+            <h3>{ &format!("Taskboard for {}", self.title) }</h3>
             <div class="status-msg">{ status_message }</div>
             <button id="newtask-btn" onclick=self.link.callback(|_| Msg::Add)>{ "new"} </button>
             {task_list}

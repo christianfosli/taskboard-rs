@@ -8,8 +8,8 @@ use taskboard_core_lib::{
 use wasm_bindgen::JsValue;
 use yew::{
     format::Json, format::Nothing, html, prelude::*, services::fetch::FetchTask,
-    services::fetch::Request, services::fetch::Response, services::ConsoleService,
-    services::FetchService, web_sys, Component, ComponentLink, Html, ShouldRender,
+    services::fetch::Request, services::fetch::Response, services::FetchService, web_sys,
+    Component, ComponentLink, Html, ShouldRender,
 };
 
 use super::taskbox::TaskBox;
@@ -68,7 +68,7 @@ impl Project {
 
                 self.ft = FetchService::fetch(req, callback).ok();
             }
-            None => ConsoleService::error("Unable to fetch tasks because the URL is not set"),
+            None => log::error!("Unable to fetch tasks because the URL is not set"),
         }
     }
 
@@ -162,7 +162,7 @@ impl Component for Project {
         match msg {
             Msg::Add => self
                 .add_task()
-                .unwrap_or_else(|err| ConsoleService::error(&err.as_string().unwrap())),
+                .unwrap_or_else(|e| log::error!("Error adding task: {:?}", e)),
             Msg::Added(task) => {
                 self.tasks = Some(match self.tasks.clone() {
                     Some(t) => t.into_iter().chain(iter::once(task)).collect(),
@@ -171,7 +171,7 @@ impl Component for Project {
             }
             Msg::Update(task) => {
                 self.update_task(&task)
-                    .unwrap_or_else(|e| ConsoleService::error(&format!("{}", e)));
+                    .unwrap_or_else(|e| log::error!("Error updating task: {}", e));
 
                 self.tasks = Some(
                     self.tasks
@@ -189,7 +189,7 @@ impl Component for Project {
                 )
             }
             Msg::UpdateSuccessful => {
-                ConsoleService::log("Task successfully updated!");
+                log::info!("Task successfully updated!");
             }
             Msg::FetchCompleted(tasks) => {
                 self.title = tasks.project_name;
@@ -204,7 +204,7 @@ impl Component for Project {
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        ConsoleService::log("Project changed? Not re-rendering");
+        log::warn!("Not re-rendering on project change");
         false
     }
 

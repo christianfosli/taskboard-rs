@@ -53,7 +53,7 @@ impl Component for Model {
                     match switch {
                         AppRoute::Project(projectid) => html! {< Project id=projectid />},
                         AppRoute::Health => html! {< Health /> },
-                        AppRoute::NotFound => html! { <h2> { "Page Not Found" } </h2> },
+                        AppRoute::NotFound => html! { <h3> { "Page Not Found" } </h3> },
                         AppRoute::Index => html! {< Home />},
                     }
                 })

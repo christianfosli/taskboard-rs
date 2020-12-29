@@ -145,7 +145,7 @@ impl Component for Health {
 
         html! {
             <>
-            <h1>{ overall_status }</h1>
+            <h3>{ overall_status }</h3>
             <p>{ detailed_status }</p>
             </>
         }

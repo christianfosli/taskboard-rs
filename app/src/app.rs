@@ -1,14 +1,18 @@
 use taskboard_core_lib::uuid::Uuid;
 use yew::{html, Component, ComponentLink};
-use yew_router::{router::Router, Switch};
+use yew_router::{route::Route, router::Router, Switch};
 
-use crate::components::{home::Home, project::Project};
+use crate::components::{health::Health, home::Home, project::Project};
 
 #[derive(Switch, Debug, Clone)]
 pub enum AppRoute {
     #[to = "/{projectid}"]
     Project(Uuid),
-    #[to = "/"]
+    #[to = "/healthz"]
+    Health,
+    #[to = "/404"]
+    NotFound,
+    #[to = "/!"]
     Index,
 }
 
@@ -36,13 +40,26 @@ impl Component for Model {
     fn view(&self) -> yew::Html {
         html! {
             <>
+            <header>
+                <h1>{ "Taskboard.cloud" }</h1>
+                <nav>
+                    <a href="/">{ "🏠 Home" }</a>
+                    <a href="/healthz"> { "💓 Health" }</a>
+                </nav>
+            </header>
             <main>
-            <Router<AppRoute, ()>
+            <Router<AppRoute>
                 render = Router::render(|switch: AppRoute| {
                     match switch {
                         AppRoute::Project(projectid) => html! {< Project id=projectid />},
+                        AppRoute::Health => html! {< Health /> },
+                        AppRoute::NotFound => html! { <h3> { "Page Not Found" } </h3> },
                         AppRoute::Index => html! {< Home />},
                     }
+                })
+                redirect = Router::redirect(|route: Route| {
+                    log::warn!("Page {:?} does not exist... Redirecting to {:?}", route.route, AppRoute::NotFound);
+                    AppRoute::NotFound
                 })
             />
             </main>

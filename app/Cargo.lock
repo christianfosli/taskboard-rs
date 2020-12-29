@@ -526,17 +526,19 @@ name = "taskboard-app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "log",
  "taskboard-core-lib",
  "wasm-bindgen",
+ "wasm-logger",
  "yew",
  "yew-router",
 ]
 
 [[package]]
 name = "taskboard-core-lib"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cda34058897864f7277bc46611180dbd79e49922b14bba024e05f84168d9e24"
+checksum = "6514d7716f964a9d8e7f3d00e2c92ada50620858f6ccee69d3bca543b1541382"
 dependencies = [
  "serde",
  "uuid",
@@ -655,6 +657,17 @@ name = "wasm-bindgen-shared"
 version = "0.2.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e7811dd7f9398f14cc76efd356f98f03aa30419dea46aa810d71e819fc97158"
+
+[[package]]
+name = "wasm-logger"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "074649a66bb306c8f2068c9016395fa65d8e08d2affcbf95acf3c24c3ab19718"
+dependencies = [
+ "log",
+ "wasm-bindgen",
+ "web-sys",
+]
 
 [[package]]
 name = "web-sys"

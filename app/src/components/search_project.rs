@@ -5,7 +5,7 @@ use yew::{
     services::fetch::Response,
     services::{
         fetch::{FetchTask, Request},
-        ConsoleService, FetchService,
+        FetchService,
     },
 };
 
@@ -67,7 +67,7 @@ impl Component for SearchProject {
                 self.ft = FetchService::fetch(req, callback).ok();
             }
             Msg::SearchCompleted(matches) => self.matches = Some(matches),
-            Msg::SearchFailed(message) => ConsoleService::error(&message),
+            Msg::SearchFailed(message) => log::error!("Search Failed: {}", &message),
         }
         true
     }

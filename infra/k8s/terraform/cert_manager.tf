@@ -19,21 +19,11 @@ resource "helm_release" "certManager" {
 }
 
 resource "kubectl_manifest" "tlsCertIssuer" {
-  yaml_body  = <<YAML
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt
-spec:
-  acme:
-    email: cfosli@gmail.com
-    server: https://acme-v02.api.letsencrypt.org/directory
-    privateKeySecretRef:
-      name: letsencrypt
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-YAML
+  yaml_body  = file("acme-issuer.yaml")
+  depends_on = [helm_release.certManager]
+}
+
+resource "kubectl_manifest" "tlsCert" {
+  yaml_body  = file("tls-cert.yaml")
   depends_on = [helm_release.certManager]
 }

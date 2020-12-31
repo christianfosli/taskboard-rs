@@ -4,13 +4,12 @@ metadata:
   name: taskboard-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-    cert-manager.io/cluster-issuer: letsencrypt
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
     - taskboard.cloud
-    secretName: tls-secret
+    secretName: tls-cert
   rules:
   - host: taskboard.cloud
     http:

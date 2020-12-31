@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-cert
+spec:
+  secretName: tls-cert
+  privateKey:
+    algorithm: ecdsa
+  dnsNames:
+  - taskboard.cloud
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer

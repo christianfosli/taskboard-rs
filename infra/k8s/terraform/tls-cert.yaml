@@ -5,7 +5,7 @@ metadata:
 spec:
   secretName: tls-cert
   privateKey:
-    algorithm: ecdsa
+    algorithm: ECDSA
   dnsNames:
   - taskboard.cloud
   issuerRef:

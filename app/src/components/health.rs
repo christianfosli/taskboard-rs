@@ -48,8 +48,8 @@ impl Health {
                         false => Msg::PongTaskSvc(Status::Down, body),
                     }
                 } else {
-                    log::warn!("Unable to parse response from task service");
-                    Msg::PongTaskSvc(Status::Down, String::from("???"))
+                    log::warn!("Failed to contact task service");
+                    Msg::PongTaskSvc(Status::Down, String::from("not reachable"))
                 }
             });
 
@@ -74,8 +74,8 @@ impl Health {
                         false => Msg::PongProjectSvc(Status::Down, body),
                     }
                 } else {
-                    log::warn!("Unable to parse response from project service");
-                    Msg::PongProjectSvc(Status::Down, String::from("???"))
+                    log::warn!("Failed to contact project service");
+                    Msg::PongProjectSvc(Status::Down, String::from("not reachable"))
                 }
             });
 
@@ -131,22 +131,30 @@ impl Component for Health {
             (Some((Status::Up, _)), Some((Status::Up, _))) => "OK",
         };
 
-        let detailed_status = format!(
-            "App OK. {} {}",
-            match &self.task_svc_status {
-                Some((_, msg)) => format!("Task service {}.", msg),
-                None => String::from(""),
-            },
-            match &self.project_svc_status {
-                Some((_, msg)) => format!("Project service {}.", msg),
-                None => String::from(""),
-            },
-        );
+        let task_service = match &self.task_svc_status {
+            Some((_, msg)) => msg,
+            None => "loading...",
+        };
+
+        let project_service = match &self.project_svc_status {
+            Some((_, msg)) => msg,
+            None => "loading...",
+        };
 
         html! {
             <>
             <h3>{ overall_status }</h3>
-            <p>{ detailed_status }</p>
+            <p>{ "App OK" }</p>
+            <p>{ "Task service " }{ task_service }</p>
+            <p>{ "Project service " }{ project_service }</p>
+            <br/>
+            <p>
+            { "More details are available through " }
+            <a href="/grafana">{ "grafana" }</a>
+            { " and "}
+            <a href="/kibana">{ "kibana" }</a>
+            { "."}
+            </p>
             </>
         }
     }

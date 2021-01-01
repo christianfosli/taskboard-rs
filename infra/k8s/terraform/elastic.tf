@@ -14,6 +14,16 @@ resource "helm_release" "eckOperator" {
 }
 
 resource "kubectl_manifest" "elasticSearchCluster" {
-  yaml_body  = file("elasticsearch-cluster.yaml")
+  yaml_body  = file("elasticsearch.yaml")
+  depends_on = [helm_release.eckOperator]
+}
+
+resource "kubectl_manifest" "kibana" {
+  yaml_body  = file("kibana.yaml")
+  depends_on = [helm_release.eckOperator]
+}
+
+resource "kubectl_manifest" "elasticBeats" {
+  yaml_body  = file("elastic-beats.yaml")
   depends_on = [helm_release.eckOperator]
 }

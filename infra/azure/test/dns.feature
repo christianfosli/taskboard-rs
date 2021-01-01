@@ -32,5 +32,6 @@ Feature: DNS and Custom Domain
   Scenario: DNS A Record must include resource id of cluster ingress LB
     Given I have azurerm_dns_a_record defined
     When its address is azurerm_dns_a_record.record
+    And it has target_resource_id
     Then it must contain target_resource_id
     And its value must match the "^.+kubernetes.+$" regex

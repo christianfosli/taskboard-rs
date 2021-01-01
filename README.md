@@ -46,9 +46,13 @@ I chose it simply to learn more about it.
 docker-compose up -d --build
 ```
 
-## Metrics and Monitoring
+## Logs, Metrics and Monitoring
 
-Metrics from Prometheus are available through Grafana at
-[https://taskboard.cloud/grafana](https://taskboard.cloud/grafana).
+Basic health info is available at
+[https://taskboard.cloud/healthz](https://taskboard.cloud/healthz).
 
-These are password protected.
+Metrics from Prometheus are available through Grafana,
+and logs are available through Kibana.
+Links at [https://taskboard.cloud/healthz](https://taskboard.cloud/healthz).
+
+Logs and metrics are password protected. LMK if you need access.

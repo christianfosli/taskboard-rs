@@ -1,0 +1,18 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: taskboard
+spec:
+  version: 7.10.1
+  count: 1
+  elasticsearchRef:
+    name: ${elasticsearch_name}
+  config:
+    server:
+      basePath: /kibana
+      rewriteBasePath: false
+  # Disable TLS for compatibility with ingress-nginx
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true

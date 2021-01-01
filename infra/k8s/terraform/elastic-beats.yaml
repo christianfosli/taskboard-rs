@@ -6,9 +6,9 @@ spec:
   type: filebeat
   version: 7.10.1
   elasticsearchRef:
-    name: taskboard
+    name: ${elasticsearch_name}
   kibanaRef:
-    name: taskboard
+    name: ${kibana_name}
   config:
     filebeat.inputs:
     - type: container

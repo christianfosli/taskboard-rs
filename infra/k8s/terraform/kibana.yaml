@@ -6,4 +6,8 @@ spec:
   version: 7.10.1
   count: 1
   elasticsearchRef:
-    name: taskboard
+    name: ${elasticsearch_name}
+  config:
+    server:
+      basePath: /kibana
+      rewriteBasePath: false

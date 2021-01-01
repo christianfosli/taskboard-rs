@@ -23,49 +23,16 @@ YAML
 }
 
 resource "kubectl_manifest" "ingressServiceMonitor" {
-  yaml_body = <<YAML
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: prom-monitor-ingress
-  namespace: ${kubernetes_namespace.monitoring.metadata.0.name}
-  labels:
-    app: ingress-nginx
-    # kube-prometheus-stack helm chart configures prometheus such that
-    # ServiceMonitor/PodMonitor must be tagged with their release name
-    release: ${helm_release.prometheus.metadata.0.name}
-spec:
-  namespaceSelector:
-    any: true
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: ingress-nginx
-  endpoints:
-  - port: metrics
-YAML
+  yaml_body = templatefile("ingress-service-monitor.yaml", {
+    namespace         = kubernetes_namespace.monitor.metadata.0.name
+    ingress_namespace = kubernetes_namespace.ingressNamespace.metadata.0.name
+    release_name      = helm_release.prometheus.metadata.0.name
+    ingress_app_name  = helm_release.ingressNginx.chart
+  })
 }
 
 resource "kubectl_manifest" "grafanaIngress" {
-  yaml_body = <<YAML
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: grafana-ingress
-  namespace: ${kubernetes_namespace.monitoring.metadata.0.name}
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: taskboard.cloud
-    http:
-      paths:
-      - path: /grafana(/|$)(.*)
-        pathType: Exact
-        backend:
-          service:
-            name: prometheus-grafana
-            port:
-              number: 80
-YAML
+  yaml_body = templatefile("grafana-ingress.yaml", {
+    namespace = kubernetes_namespace.monitoring.metadata.0.name
+  })
 }

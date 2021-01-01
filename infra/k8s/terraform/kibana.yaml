@@ -10,12 +10,9 @@ spec:
   config:
     server:
       basePath: /kibana
-  podTemplate:
-    spec:
-      containers:
-      - name: kibana
-        readinessProbe:
-          # Default is hardcoded to /login, so changing base path requires changing here too
-          httpGet:
-            path: /kibana/login
-            port: https
+      rewriteBasePath: false
+  # Disable TLS for compatibility with ingress-nginx
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true

@@ -16,4 +16,4 @@ spec:
           service:
             name: taskboard-kb-http
             port:
-              name: https
+              name: http

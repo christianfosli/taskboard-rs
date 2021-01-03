@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: taskboard-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   tls:
@@ -14,22 +14,22 @@ spec:
   - host: taskboard.cloud
     http:
       paths:
-      - path: /task
-        pathType: Prefix
+      - path: /task(/|$)(.*)
+        pathType: Exact
         backend:
           service:
             name: task-svc
             port:
               number: 80
-      - path: /project
-        pathType: Prefix
+      - path: /project(/|$)(.*)
+        pathType: Exact
         backend:
           service:
             name: project-svc
             port:
               number: 80
-      - path: /
-        pathType: Prefix
+      - path: /()(.*)
+        pathType: Exact
         backend:
           service:
             name: taskboard-app-svc

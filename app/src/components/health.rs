@@ -151,8 +151,6 @@ impl Component for Health {
             <p>
             { "More details are available through " }
             <a href="/grafana">{ "grafana" }</a>
-            { " and "}
-            <a href="/kibana">{ "kibana" }</a>
             { "."}
             </p>
             </>

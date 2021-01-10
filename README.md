@@ -50,9 +50,5 @@ docker-compose up -d --build
 
 Basic health info is available at
 [https://taskboard.cloud/healthz](https://taskboard.cloud/healthz).
-
-Metrics from Prometheus are available through Grafana,
-and logs are available through Kibana.
-Links at [https://taskboard.cloud/healthz](https://taskboard.cloud/healthz).
-
-Logs and metrics are password protected. LMK if you need access.
+Metrics from Prometheus are available through Grafana.
+These are password protected. LMK if you need access.

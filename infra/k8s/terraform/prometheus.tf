@@ -21,6 +21,9 @@ grafana:
 prometheus:
   prometheusSpec:
     scrapeInterval: "60s"
+
+    # work-around for https://github.com/prometheus-community/helm-charts/issues/579
+    shards: null
 YAML
   ]
 }

@@ -21,3 +21,17 @@ resource "kubectl_manifest" "elasticSearchCluster" {
   yaml_body  = file("elasticsearch.yaml")
   depends_on = [helm_release.eckOperator]
 }
+
+# Manual Step when running on a single node:
+# From within K8S cluster do
+# PUT <elasticsearch-url>/_template/number_of_replicas
+# {
+#   "template": "*",
+#   "settings": {
+#     "number_of_replicas": 0
+#   }
+# }
+#
+# This prevents updates from getting stuck because no nodes can be removed
+#
+# GET <elasticsearch-url>/_cat/indices  should all be green!

@@ -27,6 +27,6 @@ Feature: Azure Kubernetes Service
 
     Examples:
       | key                  | value        |
-      | node_count           | 1            |
+      | node_count           | 2            |
       | vm_size              | Standard_B2s |
       | orchestrator_version | 1.19.3       |

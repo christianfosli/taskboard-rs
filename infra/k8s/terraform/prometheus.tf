@@ -9,7 +9,7 @@ resource "helm_release" "prometheus" {
   namespace   = kubernetes_namespace.monitoring.metadata.0.name
   repository  = "https://prometheus-community.github.io/helm-charts"
   chart       = "kube-prometheus-stack"
-  version     = "~>12.8"
+  version     = "~>12.12"
   max_history = 5
 
   values = [
@@ -18,6 +18,9 @@ grafana:
   grafana.ini:
     server:
       root_url: https://taskboard.cloud/grafana
+prometheus:
+  prometheusSpec:
+    scrapeInterval: "60s"
 YAML
   ]
 }

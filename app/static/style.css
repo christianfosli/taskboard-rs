@@ -29,6 +29,16 @@ ul {
 
 li.todo {
   background-color: yellow;
+  padding: 0.5rem;
+}
+
+li.todo div {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+li.todo button {
+  padding: 0.25rem;
 }
 
 header {

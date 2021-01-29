@@ -30,6 +30,7 @@ ul {
 li.todo {
   background-color: yellow;
   padding: 0.5rem;
+  border: 1px black solid;
 }
 
 li.todo div {

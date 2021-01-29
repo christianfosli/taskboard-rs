@@ -3,7 +3,7 @@ use std::iter;
 use taskboard_core_lib::{
     commands::{CreateTaskCommand, UpdateTaskCommand},
     uuid::Uuid,
-    ProjectTasks, Task,
+    ProjectTasks, Status, Task,
 };
 use wasm_bindgen::JsValue;
 use yew::{
@@ -23,6 +23,7 @@ pub struct Project {
     tasks: Option<Vec<Task>>,
     ft: Option<FetchTask>,
     fetch_status: FetchStatus,
+    show_completed: bool,
 }
 
 enum FetchStatus {
@@ -39,6 +40,7 @@ pub enum Msg {
     UpdateSuccessful,
     FetchCompleted(ProjectTasks),
     FetchFailed,
+    ToggleShowCompleted,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -158,6 +160,7 @@ impl Component for Project {
             tasks: None,
             ft: None,
             fetch_status: FetchStatus::Loading,
+            show_completed: false,
         }
     }
 
@@ -203,6 +206,7 @@ impl Component for Project {
                 log::warn!("{:?}", Msg::FetchFailed);
                 self.fetch_status = FetchStatus::Failed;
             }
+            Msg::ToggleShowCompleted => self.show_completed = !self.show_completed,
         }
         true
     }
@@ -225,10 +229,18 @@ impl Component for Project {
             }
         };
 
-        let task_list = match self.tasks.clone() {
+        let task_list = match self.tasks.clone().map(|t| {
+            t.into_iter().filter_map(|t| match self.show_completed {
+                true => Some(t),
+                false => match t.status {
+                    Status::Done => None,
+                    _ => Some(t),
+                },
+            })
+        }) {
             Some(tasks) => html! {
                 <ul>
-                {tasks.iter().map(|t| to_taskbox(t)).collect::<Html>()}
+                {tasks.map(|t| to_taskbox(&t)).collect::<Html>()}
                 </ul>
             },
             None => html! {
@@ -247,6 +259,16 @@ impl Component for Project {
             <h3>{ &format!("Taskboard for {}", self.title) }</h3>
             <div class="status-msg">{ status_message }</div>
             <button id="newtask-btn" onclick=self.link.callback(|_| Msg::Add)>{ "new"} </button>
+            <div>
+                <label for="show-completed">{ "Show completed" }</label>
+                <input
+                    type="checkbox"
+                    id="show-completed"
+                    name="show completed tasks"
+                    checked=self.show_completed
+                    onchange=self.link.callback(|_| Msg::ToggleShowCompleted)
+                />
+            </div>
             {task_list}
             </>
         }

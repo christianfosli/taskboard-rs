@@ -31,6 +31,7 @@ enum FetchStatus {
     Failed,
 }
 
+#[derive(Debug)]
 pub enum Msg {
     Add,
     Added(Task),
@@ -120,6 +121,8 @@ impl Project {
     }
 
     fn update_task(&mut self, task: &Task) -> Result<(), anyhow::Error> {
+        log::info!("Updating task {}...", task.number);
+
         let command = UpdateTaskCommand {
             project_id: self.id,
             updated_task: task.clone(),
@@ -189,7 +192,7 @@ impl Component for Project {
                 )
             }
             Msg::UpdateSuccessful => {
-                log::info!("Task successfully updated!");
+                log::info!("{:?}", Msg::UpdateSuccessful);
             }
             Msg::FetchCompleted(tasks) => {
                 self.title = tasks.project_name;
@@ -197,6 +200,7 @@ impl Component for Project {
                 self.fetch_status = FetchStatus::Completed;
             }
             Msg::FetchFailed => {
+                log::warn!("{:?}", Msg::FetchFailed);
                 self.fetch_status = FetchStatus::Failed;
             }
         }

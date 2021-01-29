@@ -1,5 +1,6 @@
 use taskboard_core_lib::{Status, Task};
-use yew::prelude::*;
+use wasm_bindgen::JsValue;
+use yew::{prelude::*, web_sys};
 
 pub struct TaskBox {
     link: ComponentLink<Self>,
@@ -8,7 +9,9 @@ pub struct TaskBox {
 }
 
 pub enum Msg {
+    ChangeTitle,
     StatusChanged(Status),
+    ChangeRem,
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -30,6 +33,20 @@ impl Component for TaskBox {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::ChangeTitle => {
+                let window = web_sys::window().expect("No window available");
+                let title = window.prompt_with_message("Enter task name").ok().flatten();
+                match title {
+                    Some(title) => self.onchange.emit(Task {
+                        title,
+                        ..self.data.clone()
+                    }),
+                    None => log::warn!(
+                        "Not changing title for task {}. Operation failed or was cancelled.",
+                        self.data.number
+                    ),
+                }
+            }
             Msg::StatusChanged(status) => {
                 let remaining_work = match status {
                     Status::Done => Some(0),
@@ -42,6 +59,29 @@ impl Component for TaskBox {
                     remaining_work,
                     ..self.data.clone()
                 })
+            }
+            Msg::ChangeRem => {
+                let window = web_sys::window().expect("No window available");
+
+                let new_rem = window
+                    .prompt_with_message("Enter remaining work")
+                    .and_then(|rem: Option<String>| rem.ok_or(JsValue::from("No value provided")))
+                    .and_then(|rem: String| {
+                        rem.parse::<u8>()
+                            .map_err(|err| JsValue::from(err.to_string()))
+                    });
+
+                match new_rem {
+                    Ok(rem) => self.onchange.emit(Task {
+                        remaining_work: Some(rem),
+                        ..self.data.clone()
+                    }),
+                    Err(e) => log::error!(
+                        "Failed to update rem work for {} due to {:?}",
+                        self.data.number,
+                        e
+                    ),
+                }
             }
         }
         false
@@ -76,10 +116,16 @@ impl Component for TaskBox {
 
         html! {
             <li class="todo">
-                <h3>{ &self.data.title }</h3>
+                <h3>{ &self.data.title } </h3>
                 <p class="status">{ format!("status: {:?}", self.data.status) }</p>
-                <p>{rem_work}</p>
-                {action}
+                <p>{rem_work}  </p>
+                <div>
+                    <button onclick=self.link.callback(|_| Msg::ChangeTitle)>{ "Edit title" }</button>
+                    <button onclick=self.link.callback(|_| Msg::ChangeRem)>{ "Update rem" }</button>
+                </div>
+                <div>
+                    {action}
+                </div>
             </li>
         }
     }

@@ -1,4 +1,4 @@
-use std::iter;
+use std::{cmp::Reverse, iter};
 
 use taskboard_core_lib::{
     commands::{CreateTaskCommand, UpdateTaskCommand},
@@ -229,7 +229,11 @@ impl Component for Project {
             }
         };
 
-        let task_list = match self.tasks.clone().map(|t| {
+        let task_list = match self.tasks.clone().map(|mut t| {
+            // Display new tasks first
+            t.sort_unstable_by_key(|t| Reverse(t.number));
+
+            // Filter out completed when applicable
             t.into_iter().filter_map(|t| match self.show_completed {
                 true => Some(t),
                 false => match t.status {
@@ -238,6 +242,7 @@ impl Component for Project {
                 },
             })
         }) {
+            // Convert to HTML
             Some(tasks) => html! {
                 <ul>
                 {tasks.map(|t| to_taskbox(&t)).collect::<Html>()}

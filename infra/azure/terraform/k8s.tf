@@ -4,6 +4,8 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   resource_group_name = data.azurerm_resource_group.rg.name
   dns_prefix          = "aks-taskboard-dns"
   kubernetes_version  = var.K8S_VERSION
+  load_balancer_sku   = Basic
+  os_disk_size_gb     = 32
 
   default_node_pool {
     name                 = "default"

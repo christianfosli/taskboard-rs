@@ -11,11 +11,13 @@ Feature: Azure Kubernetes Service
     And its value must be <value>
 
     Examples:
-      | key                     | value         |
-      | name                    | aks-taskboard |
-      | location                | northeurope   |
-      | resource_group_name     | rg-taskboard  |
-      | kubernetes_version      | 1.19.6        |
+      | key                 | value         |
+      | name                | aks-taskboard |
+      | location            | northeurope   |
+      | resource_group_name | rg-taskboard  |
+      | kubernetes_version  | 1.19.6        |
+      | load_balancer_sku   | Basic         |
+      | os_disk_size_gb     | 32            |
 
 
   Scenario Outline: AKS Default Node Pool

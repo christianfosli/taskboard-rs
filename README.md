@@ -48,5 +48,5 @@ docker-compose up -d --build
 ## Logs, Metrics and Monitoring
 
 Basic health info is available at
-[https://www.taskboard.cloud/healthz](https://taskboard.cloud/healthz).
+[https://www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
 More details metrics are password protected. LMK if you need access.

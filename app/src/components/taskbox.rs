@@ -122,7 +122,7 @@ impl Component for TaskBox {
         };
 
         html! {
-            <li class="todo">
+            <li class=format!("taskbox {:?}", self.data.status)>
                 <h3>{ &self.data.title } </h3>
                 <p class="status">{ format!("status: {:?}", self.data.status) }</p>
                 <p>{rem_work}  </p>

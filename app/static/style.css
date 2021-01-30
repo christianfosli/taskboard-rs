@@ -31,18 +31,26 @@ ul {
   padding: 1rem;
 }
 
-li.todo {
+li.taskbox {
   background-color: yellow;
   padding: 0.5rem;
   border: 1px black solid;
 }
 
-li.todo div {
+li.taskbox.Todo {
+  transform: translateX(-2rem);
+}
+
+li.taskbox.Done {
+  transform: translateX(2rem);
+}
+
+li.taskbox div {
   display: flex;
   justify-content: space-evenly;
 }
 
-li.todo button {
+li.taskbox button {
   padding: 0.25rem;
 }
 

@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: taskboard-ingress
+  name: api-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - taskboard.cloud
+    - api.taskboard.cloud
     secretName: tls-cert
   rules:
-  - host: taskboard.cloud
+  - host: api.taskboard.cloud
     http:
       paths:
       - path: /task(/|$)(.*)
@@ -26,12 +26,5 @@ spec:
         backend:
           service:
             name: project-svc
-            port:
-              number: 80
-      - path: /()(.*)
-        pathType: Exact
-        backend:
-          service:
-            name: taskboard-app-svc
             port:
               number: 80

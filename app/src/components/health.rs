@@ -149,8 +149,8 @@ impl Component for Health {
             <p>{ "Project service " }{ project_service }</p>
             <br/>
             <p>
-            { "More details are available through " }
-            <a href="/grafana">{ "grafana" }</a>
+            { "More details are available " }
+            <a href="https://metrics.taskboard.cloud">{ "here" }</a>
             { "."}
             </p>
             </>

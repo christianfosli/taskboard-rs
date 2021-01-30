@@ -9,12 +9,10 @@
 
 A Kanban inspired board for managing tasks/todo's and tracking progress.
 
-Visit [https://taskboard.cloud](https://taskboard.cloud) to try it out!
+Visit [https://www.taskboard.cloud](https://www.taskboard.cloud) to try it out!
 
-This application is mostly a proof-of-concept of full-stack development with
-Rust.
-It's also a nice chance for me to play with rust, docker, kubernetes and
-elasticsearch.
+This application is mostly a proof-of-concept of full-stack development with Rust.
+It's also a nice chance for me to play with rust, docker, kubernetes and elasticsearch.
 
 Elasticsearch might be a weird choice for persisting data.
 I chose it simply to learn more about it.
@@ -34,7 +32,8 @@ I chose it simply to learn more about it.
 
 * Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
   for docker and docker-compose.
-  This is required because the Dockerfiles are using buildkit features for caching rust compilations.
+  This is not strictly required, *but highly recommended*, because it allows
+  caching builds so you don't have to build all the dependencies from scratch...
 
   ```sh
   . enable_buildkit.sh
@@ -49,6 +48,5 @@ docker-compose up -d --build
 ## Logs, Metrics and Monitoring
 
 Basic health info is available at
-[https://taskboard.cloud/healthz](https://taskboard.cloud/healthz).
-Metrics from Prometheus are available through Grafana.
-These are password protected. LMK if you need access.
+[https://www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
+More detailed metrics are password protected. LMK if you need access.

@@ -6,12 +6,14 @@ pub struct TaskBox {
     link: ComponentLink<Self>,
     onchange: Callback<Task>,
     data: Task,
+    error: Option<String>,
 }
 
 pub enum Msg {
     ChangeTitle,
     StatusChanged(Status),
     ChangeRem,
+    SetError(Option<String>),
 }
 
 #[derive(Clone, PartialEq, Properties)]
@@ -26,8 +28,9 @@ impl Component for TaskBox {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             link,
-            data: props.data,
             onchange: props.onchange,
+            data: props.data,
+            error: None,
         }
     }
 
@@ -76,12 +79,16 @@ impl Component for TaskBox {
                         remaining_work: Some(rem),
                         ..self.data.clone()
                     }),
-                    Err(e) => log::error!(
-                        "Failed to update rem work for {} due to {:?}",
-                        self.data.number,
-                        e
-                    ),
+                    Err(e) => self.link.send_message(Msg::SetError(e.as_string())),
                 }
+            }
+            Msg::SetError(error) => {
+                match &error {
+                    Some(e) => log::error!("{}", e),
+                    None => (),
+                }
+                self.error = error;
+                return true;
             }
         }
         false
@@ -121,11 +128,17 @@ impl Component for TaskBox {
                 <p>{rem_work}  </p>
                 <div>
                     <button onclick=self.link.callback(|_| Msg::ChangeTitle)>{ "Edit title" }</button>
-                    <button onclick=self.link.callback(|_| Msg::ChangeRem)>{ "Update rem" }</button>
+                    <button disabled=self.data.status==Status::Done onclick=self.link.callback(|_| Msg::ChangeRem)>{ "Update rem" }</button>
                 </div>
                 <div>
                     {action}
                 </div>
+                <p class="error">{
+                    match &self.error {
+                        Some(e) => e,
+                        None => ""
+                    }
+                }</p>
             </li>
         }
     }

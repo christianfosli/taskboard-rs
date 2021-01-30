@@ -22,6 +22,10 @@ h1,h2,h3 {
   color: blue;
 }
 
+.error {
+  color: darkred;
+}
+
 ul {
   list-style-type: none;
   padding: 1rem;

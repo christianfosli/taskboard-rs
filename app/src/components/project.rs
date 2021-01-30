@@ -262,7 +262,7 @@ impl Component for Project {
         html! {
             <>
             <h3>{ &format!("Taskboard for {}", self.title) }</h3>
-            <div class="status-msg">{ status_message }</div>
+            <div class="error">{ status_message }</div>
             <button id="newtask-btn" onclick=self.link.callback(|_| Msg::Add)>{ "new"} </button>
             <div>
                 <label for="show-completed">{ "Show completed" }</label>

@@ -1,24 +1,23 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: grafana-ingress
-  namespace: ${namespace}
+  name: app-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   tls:
-  - host:
-    - metrics.taskboard.cloud
+  - hosts:
+    - www.taskboard.cloud
     secretName: tls-cert
   rules:
-  - host: metrics.taskboard.cloud
+  - host: www.taskboard.cloud
     http:
       paths:
       - path: /()(.*)
         pathType: Exact
         backend:
           service:
-            name: prometheus-grafana
+            name: taskboard-app-svc
             port:
               number: 80

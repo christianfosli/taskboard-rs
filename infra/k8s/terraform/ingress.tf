@@ -18,6 +18,10 @@ resource "helm_release" "ingressNginx" {
   }
 }
 
-resource "kubectl_manifest" "ingress" {
-  yaml_body = file("ingress.yaml")
+resource "kubectl_manifest" "appIngress" {
+  yaml_body = file("app-ingress.yaml")
+}
+
+resource "kubectl_manifest" "apiIngress" {
+  yaml_body = file("api-ingress.yaml")
 }

@@ -7,7 +7,9 @@ spec:
   privateKey:
     algorithm: ECDSA
   dnsNames:
-  - taskboard.cloud
+  - www.taskboard.cloud
+  - api.taskboard.cloud
+  - metrics.taskboard.cloud
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer

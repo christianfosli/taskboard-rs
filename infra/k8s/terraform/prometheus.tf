@@ -14,10 +14,6 @@ resource "helm_release" "prometheus" {
 
   values = [
     <<YAML
-grafana:
-  grafana.ini:
-    server:
-      root_url: https://taskboard.cloud/grafana
 prometheus:
   prometheusSpec:
     scrapeInterval: "60s"

@@ -2,9 +2,9 @@ FROM rust:1.49 AS builder
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 WORKDIR /usr/src/app
 ARG VERSION=latest
-ARG TASK_SERVICE_URL=https://taskboard.cloud/task
+ARG TASK_SERVICE_URL=https://api.taskboard.cloud/task
 ENV TASK_SERVICE_URL=$TASK_SERVICE_URL
-ARG PROJECT_SERVICE_URL=https://taskboard.cloud/project
+ARG PROJECT_SERVICE_URL=https://api.taskboard.cloud/project
 ENV PROJECT_SERVICE_URL=$PROJECT_SERVICE_URL
 ARG BUILD_PROFILE=release
 COPY . .

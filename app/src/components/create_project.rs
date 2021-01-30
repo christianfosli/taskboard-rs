@@ -51,23 +51,27 @@ impl Component for CreateProject {
                     name: self.name.clone(),
                 };
 
-                let req = Request::post(PROJECT_SERVICE_URL.unwrap())
+                Request::post(PROJECT_SERVICE_URL.unwrap())
                     .header("Content-Type", "application/json")
                     .body(Json(&command))
-                    .expect("failed building request");
-
-                let callback =
-                    self.link
-                        .callback(|res: Response<Json<Result<Project, anyhow::Error>>>| {
-                            if let (meta, Json(Ok(body))) = res.into_parts() {
-                                if meta.status.is_success() {
-                                    return Msg::SetCreated(body);
+                    .map(|req| {
+                        let callback = self.link.callback(
+                            |res: Response<Json<Result<Project, anyhow::Error>>>| {
+                                if let (meta, Json(Ok(body))) = res.into_parts() {
+                                    if meta.status.is_success() {
+                                        return Msg::SetCreated(body);
+                                    }
                                 }
-                            }
-                            Msg::SetError(String::from("An error occured"))
-                        });
+                                Msg::SetError(String::from("An error occured"))
+                            },
+                        );
 
-                self.ft = FetchService::fetch(req, callback).ok();
+                        self.ft = FetchService::fetch(req, callback).ok();
+                    })
+                    .unwrap_or_else(|err| {
+                        self.link.send_message(Msg::SetError(err.to_string()));
+                    });
+
                 return false;
             }
             Msg::SetCreated(project) => {
@@ -75,6 +79,7 @@ impl Component for CreateProject {
                 self.error = None;
             }
             Msg::SetError(message) => {
+                log::error!("Create project failed: {}", &message);
                 self.error = Some(message);
             }
         }

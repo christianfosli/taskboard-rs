@@ -16,6 +16,7 @@ pub struct SearchProject {
     search_query: String,
     matches: Option<Vec<Project>>,
     ft: Option<FetchTask>,
+    error: Option<String>,
 }
 
 pub enum Msg {
@@ -36,6 +37,7 @@ impl Component for SearchProject {
             search_query: String::from(""),
             matches: None,
             ft: None,
+            error: None,
         }
     }
 
@@ -45,29 +47,37 @@ impl Component for SearchProject {
             Msg::PerformSearch => {
                 self.matches = None;
 
-                let req = Request::get(format!(
+                Request::get(format!(
                     "{}/search/{}",
                     PROJECT_SERVICE_URL.unwrap(),
                     self.search_query
                 ))
                 .body(Nothing)
-                .expect("failed to build request");
-
-                let callback = self.link.callback(
-                    |res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
-                        if let (meta, Json(Ok(body))) = res.into_parts() {
-                            if meta.status.is_success() {
-                                return Msg::SearchCompleted(body);
+                .map(|req| {
+                    let callback = self.link.callback(
+                        |res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
+                            if let (meta, Json(Ok(body))) = res.into_parts() {
+                                if meta.status.is_success() {
+                                    return Msg::SearchCompleted(body);
+                                }
                             }
-                        }
-                        Msg::SearchFailed(String::from("An error occured"))
-                    },
-                );
+                            Msg::SearchFailed(String::from("An error occured"))
+                        },
+                    );
 
-                self.ft = FetchService::fetch(req, callback).ok();
+                    self.ft = FetchService::fetch(req, callback).ok();
+                })
+                .unwrap_or_else(|err| self.link.send_message(Msg::SearchFailed(err.to_string())));
+                return false;
             }
-            Msg::SearchCompleted(matches) => self.matches = Some(matches),
-            Msg::SearchFailed(message) => log::error!("Search Failed: {}", &message),
+            Msg::SearchCompleted(matches) => {
+                self.matches = Some(matches);
+                self.error = None;
+            }
+            Msg::SearchFailed(message) => {
+                log::error!("Search Failed: {}", &message);
+                self.error = Some(message);
+            }
         }
         true
     }
@@ -104,6 +114,15 @@ impl Component for SearchProject {
             }
         };
 
+        let error = match &self.error {
+            Some(e) => html! {
+                <div class="error">
+                { e }
+                </div>
+            },
+            None => html! {},
+        };
+
         html! {
             <>
             <h3>{ "Search for an existing project" }</h3>
@@ -112,6 +131,7 @@ impl Component for SearchProject {
                 <input type="text" id="search-project-field" name="query" value={&self.search_query} oninput={handle_input} required={true}/>
                 <input type="submit" value="Search"/>
             </form>
+            {error}
             {matches}
             </>
         }

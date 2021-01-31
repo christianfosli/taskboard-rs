@@ -30,7 +30,6 @@ Feature: Azure Kubernetes Service
       | node_count           | 1            |
       | vm_size              | Standard_B2s |
       | orchestrator_version | 1.19.6       |
-      | load_balancer_sku    | Basic        |
       | os_disk_size_gb      | 32           |
 
 

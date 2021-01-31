@@ -9,7 +9,13 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     name                 = "default"
     node_count           = var.AKS_NODE_POOL["node_count"]
     vm_size              = var.AKS_NODE_POOL["vm_size"]
+    os_disk_size_gb      = var.AKS_NODE_POOL["os_disk_size_gb"]
     orchestrator_version = var.K8S_VERSION
+  }
+
+  network_profile {
+    network_plugin    = "azure"
+    load_balancer_sku = "Basic"
   }
 
   identity {

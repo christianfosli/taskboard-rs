@@ -8,8 +8,9 @@ variable "K8S_VERSION" {
 
 variable "AKS_NODE_POOL" {
   default = {
-    node_count = 1
-    vm_size    = "Standard_B2s"
+    node_count      = 1
+    vm_size         = "Standard_B2s"
+    os_disk_size_gb = 32
   }
 }
 

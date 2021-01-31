@@ -5,13 +5,12 @@ resource "kubernetes_namespace" "elasticNamespace" {
 }
 
 resource "helm_release" "eckOperator" {
-  name         = "eck-operator"
-  namespace    = kubernetes_namespace.elasticNamespace.metadata.0.name
-  repository   = "https://helm.elastic.co"
-  chart        = "eck-operator"
-  version      = "~>1.3"
-  force_update = true
-  max_history  = 5
+  name        = "eck-operator"
+  namespace   = kubernetes_namespace.elasticNamespace.metadata.0.name
+  repository  = "https://helm.elastic.co"
+  chart       = "eck-operator"
+  version     = "~>1.3"
+  max_history = 5
 }
 
 # --- The below resources should ideally be put into a separate namespace

@@ -1,5 +1,6 @@
 use reqwest::StatusCode;
 use taskboard_core_lib::{commands::CompleteTaskCommand, Status, Task};
+use tracing::info;
 use warp::{reject, Rejection, Reply};
 
 use crate::{

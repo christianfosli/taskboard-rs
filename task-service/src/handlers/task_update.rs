@@ -1,4 +1,5 @@
 use taskboard_core_lib::commands::UpdateTaskCommand;
+use tracing::info;
 use warp::{hyper::StatusCode, reject, Rejection, Reply};
 
 use crate::{errors::PersistError, store::TaskStore};

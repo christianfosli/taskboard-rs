@@ -1,4 +1,5 @@
 use taskboard_core_lib::{uuid::Uuid, Project};
+use tracing::error;
 use warp::{
     reject::{self, Reject},
     reply, Rejection, Reply,

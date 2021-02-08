@@ -2,6 +2,7 @@ use std::env;
 use std::future::Future;
 
 use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, Project, Status, Task};
+use tracing::{error, info};
 use warp::{
     hyper::StatusCode,
     reject,

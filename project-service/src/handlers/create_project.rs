@@ -1,4 +1,5 @@
 use taskboard_core_lib::{commands::CreateProjectCommand, Project};
+use tracing::error;
 use warp::{
     hyper::StatusCode,
     reject::{self, Reject},

@@ -50,6 +50,8 @@ spec:
             memory: 100Mi
             cpu: 100m
         env:
+        - name: RUST_LOG
+          value: info
         - name: ELASTIC_URL
           value: https://taskboard-es-http:9200
         - name: ELASTIC_USERNAME

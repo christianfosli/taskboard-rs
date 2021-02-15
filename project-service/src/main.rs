@@ -18,6 +18,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let routes = routes::health_check_route(&es_client)
         .or(routes::project_routes(&es_client))
+        .or(warp::path!("print-correlation-id")
+            .and(warp::get())
+            .and(warp::header::optional::<String>("X-Correlation-Id"))
+            .map(|correlation_id| format!("correlation-id: {:?}", correlation_id)))
         .with(cors::cors())
         .with(warp::trace::request());
 

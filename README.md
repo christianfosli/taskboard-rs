@@ -17,6 +17,12 @@ It's also a nice chance for me to play with rust, docker, kubernetes and elastic
 Elasticsearch might be a weird choice for persisting data.
 I chose it simply to learn more about it.
 
+## Architecture Overview
+
+Here's a high level overview of the exposed services:
+
+![Architecture overview of taskboard.cloud](architecture-overview.svg)
+
 ## Development
 
 ### Prerequisites

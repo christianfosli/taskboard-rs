@@ -1,7 +1,4 @@
-use std::env;
-use std::future::Future;
-
-use taskboard_core_lib::{commands::CreateTaskCommand, uuid::Uuid, Project, Status, Task};
+use taskboard_core_lib::{commands::CreateTaskCommand, Status, Task};
 use tracing::{error, info};
 use warp::{
     hyper::StatusCode,
@@ -10,25 +7,23 @@ use warp::{
     Rejection, Reply,
 };
 
-use crate::errors::PersistError;
 use crate::store::TaskStore;
+use crate::{errors::PersistError, services::project_service::IProjectService};
 
-pub async fn handle_task_create<Fut>(
+pub async fn handle_task_create(
     store: impl TaskStore,
-    claim_task_number: impl FnOnce(Uuid) -> Fut,
+    project_service: impl IProjectService,
     command: CreateTaskCommand,
-) -> Result<impl Reply, Rejection>
-where
-    Fut: Future<Output = Result<usize, anyhow::Error>>,
-{
-    info!("Create Task: {:?}", command);
-
-    let number = claim_task_number(command.project_id).await.map_err(|e| {
-        error!("Unable to claim task number: {:?}", e);
-        reject::custom(PersistError {
-            reason: String::from("Unable to claim task number"),
-        })
-    })?;
+) -> Result<impl Reply, Rejection> {
+    let number = project_service
+        .claim_task_number(&command.project_id)
+        .await
+        .map_err(|e| {
+            error!("Unable to claim task number: {:?}", e);
+            reject::custom(PersistError {
+                reason: String::from("Unable to claim task number"),
+            })
+        })?;
 
     let task = Task {
         number,
@@ -48,23 +43,5 @@ where
         })?;
 
     info!("Task {} created successfully", number);
-
     Ok(with_status(reply::json(&task), StatusCode::CREATED))
-}
-
-pub async fn claim_task_number(project_id: Uuid) -> Result<usize, anyhow::Error> {
-    let url = format!(
-        "{}/{}/increment-counter",
-        env::var("PROJECT_SERVICE_URL")?,
-        project_id
-    );
-
-    let response = reqwest::Client::new()
-        .post(&url)
-        .send()
-        .await?
-        .json::<Project>()
-        .await?;
-
-    Ok(response.task_conter)
 }

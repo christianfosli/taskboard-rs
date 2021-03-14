@@ -1,11 +1,13 @@
 use std::env;
 
+use services::project_service::ProjectService;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::Filter;
 mod cors;
 mod errors;
 mod handlers;
 mod routes;
+mod services;
 mod store;
 
 #[tokio::main]
@@ -17,7 +19,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let es_client = store::es::create_client()?;
 
-    let routes = routes::task_routes(&es_client)
+    let project_service_url = env::var("PROJECT_SERVICE_URL")?;
+    let project_service_client = ProjectService::new(reqwest::Client::new(), project_service_url);
+
+    let routes = routes::task_routes(&es_client, &project_service_client)
         .or(routes::health_check_route(&es_client))
         .with(cors::cors())
         .with(warp::trace::request());

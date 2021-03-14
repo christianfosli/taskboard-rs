@@ -4,8 +4,8 @@ use anyhow::{anyhow, Error};
 use async_trait::async_trait;
 use elasticsearch::{
     auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
-    http::transport::TransportBuilder, http::StatusCode, http::Url, Elasticsearch, IndexParts,
-    SearchParts,
+    http::transport::TransportBuilder, http::StatusCode, http::Url, DeleteParts, Elasticsearch,
+    IndexParts, SearchParts,
 };
 use serde_json::{json, Value};
 use taskboard_core_lib::{uuid::Uuid, Project};
@@ -111,6 +111,15 @@ impl ProjectStore for Elasticsearch {
         let res = self
             .index(IndexParts::IndexId(INDEX, &project.id.to_string()))
             .body(project)
+            .send()
+            .await?;
+        res.error_for_status_code()?;
+        Ok(())
+    }
+
+    async fn delete(&self, project_id: &Uuid) -> Result<(), Error> {
+        let res = self
+            .delete(DeleteParts::IndexId(INDEX, &project_id.to_string()))
             .send()
             .await?;
         res.error_for_status_code()?;

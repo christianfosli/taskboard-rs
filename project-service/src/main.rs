@@ -5,6 +5,7 @@ use warp::Filter;
 mod cors;
 mod handlers;
 mod routes;
+mod services;
 mod store;
 
 #[tokio::main]
@@ -16,8 +17,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let es_client = store::es::create_client()?;
 
+    let task_service_url = env::var("TASK_SERVICE_URL")?;
+    let task_service_client =
+        services::task_service::TaskService::new(reqwest::Client::new(), task_service_url);
+
     let routes = routes::health_check_route(&es_client)
-        .or(routes::project_routes(&es_client))
+        .or(routes::project_routes(&es_client, &task_service_client))
         .with(cors::cors())
         .with(warp::trace::request());
 

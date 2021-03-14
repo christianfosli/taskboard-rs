@@ -61,6 +61,8 @@ spec:
             secretKeyRef:
               name: taskboard-es-elastic-user
               key: elastic
+        - name: TASK_SERVICE_URL
+          value: http://task-svc
 
 ---
 apiVersion: autoscaling/v2beta2

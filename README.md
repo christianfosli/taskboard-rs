@@ -19,9 +19,15 @@ I chose it simply to learn more about it.
 
 ## Architecture Overview
 
-Here's a high level overview of the exposed services:
+Here's a high level overview of the different services:
 
 ![Architecture overview of taskboard.cloud](architecture-overview.svg)
+
+## Logs, Metrics and Monitoring
+
+Basic health info is available at
+[https://www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
+More detailed metrics are password protected. LMK if you need access.
 
 ## Development
 
@@ -38,11 +44,12 @@ Here's a high level overview of the exposed services:
 
 * Enable [BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
   for docker and docker-compose.
-  This is not strictly required, *but highly recommended*, because it allows
-  caching builds so you don't have to build all the dependencies from scratch...
+  This is not required, *but recommended* because it significantly speeds up
+  subsequent builds due to caching.
 
   ```sh
-  . enable_buildkit.sh
+  export DOCKER_BUILDKIT=1
+  export COMPOSE_DOCKER_CLI_BUILD=1
   ```
 
 ### Run the code
@@ -51,7 +58,29 @@ Here's a high level overview of the exposed services:
 docker-compose up -d --build
 ```
 
-### Potential issues
+### Likely issues when running locally
+
+#### Port 80 not available
+
+docker-compose.yaml maps the nginx container serving the front-end app to
+http://localhost
+
+```yaml
+ports:
+  - "80:80"
+```
+
+This will fail if you already have something running on port 80.
+Feel free to change it to something else.
+
+#### Front-end app not updating
+
+It's probably cached in the browser. Disable cache or hard-reload
+(control-shift-r in chrome).
+The problem is mitigated for CI builds by appending the (short) commit hash to
+the file names.
+
+#### Creating projects and tasks fails when low disk-space available
 
 Your local elasticsearch cluster becomes read-only if you're low on disk space.
 This makes creating tasks and projects fail.
@@ -75,9 +104,3 @@ docker system df           # check how much space docker is taking
 docker image prune -a      # remove all unused images
 docker build prune         # remove dangling build cache
 ```
-
-## Logs, Metrics and Monitoring
-
-Basic health info is available at
-[https://www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
-More detailed metrics are password protected. LMK if you need access.

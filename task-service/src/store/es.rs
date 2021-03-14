@@ -2,10 +2,11 @@ use std::env;
 
 use anyhow::{anyhow, Error};
 use async_trait::async_trait;
+use elasticsearch::SearchParts;
 use elasticsearch::{
     auth::Credentials, cert::CertificateValidation, http::transport::SingleNodeConnectionPool,
-    http::transport::TransportBuilder, http::StatusCode, http::Url, Elasticsearch, IndexParts,
-    SearchParts,
+    http::transport::TransportBuilder, http::StatusCode, http::Url, DeleteByQueryParts,
+    Elasticsearch, IndexParts,
 };
 use serde_json::{json, Value};
 use taskboard_core_lib::{uuid::Uuid, Task};
@@ -115,6 +116,23 @@ impl TaskStore for Elasticsearch {
                 &task.number.to_string(),
             ))
             .body(task)
+            .send()
+            .await?;
+        res.error_for_status_code()?;
+        Ok(())
+    }
+
+    async fn delete(&self, project_id: &Uuid) -> Result<(), Error> {
+        let res = self
+            .delete_by_query(DeleteByQueryParts::Index(&[&format!(
+                "task-{}",
+                project_id
+            )]))
+            .body(json!({
+                "query": {
+                    "match_all": { }
+                }
+            }))
             .send()
             .await?;
         res.error_for_status_code()?;

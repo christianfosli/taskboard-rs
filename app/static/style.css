@@ -16,6 +16,10 @@ h1,h2,h3 {
   text-align: center;
 }
 
+button {
+  padding: 0.5rem;
+}
+
 #newtask-btn {
   padding: 1rem;
   font-size: 1.5rem;
@@ -24,6 +28,10 @@ h1,h2,h3 {
 
 .error {
   color: darkred;
+}
+
+.bg-danger {
+  background-color: lightsalmon;
 }
 
 ul {

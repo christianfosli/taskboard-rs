@@ -11,10 +11,16 @@ pub struct FetchError {
 }
 
 #[derive(Clone, Debug)]
+pub struct DeleteError {
+    pub reason: String,
+}
+
+#[derive(Clone, Debug)]
 pub struct ValidationError {
     pub reason: String,
 }
 
 impl Reject for PersistError {}
 impl Reject for FetchError {}
+impl Reject for DeleteError {}
 impl Reject for ValidationError {}

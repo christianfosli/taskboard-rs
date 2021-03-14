@@ -11,6 +11,7 @@ pub trait TaskStore {
     async fn fetch_tasks(&self, project_id: &Uuid) -> Result<Vec<Task>, Error>;
     async fn get(&self, project_id: &Uuid, task_number: usize) -> Result<Option<Task>, Error>;
     async fn persist(&self, project_id: &Uuid, task: &Task) -> Result<(), Error>;
+    async fn delete(&self, project_id: &Uuid) -> Result<(), Error>;
 }
 
 pub fn with_store(

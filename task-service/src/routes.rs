@@ -6,6 +6,7 @@ use crate::{
     handlers::{
         health::handle_health,
         task_create::{claim_task_number, handle_task_create},
+        task_delete::handle_task_delete,
         task_list::handle_task_list,
         task_update::handle_task_update,
     },
@@ -41,6 +42,11 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
         .and(warp::body::json())
         .and_then(handle_task_update);
 
+    let delete = warp::path!("project-tasks" / String)
+        .and(warp::delete())
+        .and(with_store(store.clone()))
+        .and_then(|id, store| handle_task_delete(store, id));
+
     let start = warp::path!("task" / "start")
         .and(warp::post())
         .and(with_store(store.clone()))
@@ -53,7 +59,7 @@ pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
         .and(warp::body::json())
         .and_then(handle_task_completed);
 
-    get.or(create).or(update).or(start).or(complete)
+    get.or(create).or(update).or(delete).or(start).or(complete)
 }
 
 #[cfg(test)]
@@ -98,6 +104,12 @@ mod tests {
             match self.success {
                 true => Ok(()),
                 false => Err(anyhow!("MockTaskStoreError: Could not persist")),
+            }
+        }
+        async fn delete(&self, _: &Uuid) -> Result<(), Error> {
+            match self.success {
+                true => Ok(()),
+                false => Err(anyhow!("MockTaskStoreError: Could not delete")),
             }
         }
     }
@@ -171,6 +183,20 @@ mod tests {
                     remaining_work: Some(5),
                 },
             })
+            .reply(&routes)
+            .await;
+
+        assert_eq!(StatusCode::OK, res.status());
+    }
+
+    #[tokio::test]
+    async fn delete_project_tasks_should_be_ok() {
+        let store = MockTaskStore { success: true };
+        let routes = task_routes(&store);
+
+        let res = warp::test::request()
+            .method("DELETE")
+            .path(&format!("/project-tasks/{}", Uuid::new_v4()))
             .reply(&routes)
             .await;
 

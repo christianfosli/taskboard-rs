@@ -51,6 +51,31 @@ Here's a high level overview of the exposed services:
 docker-compose up -d --build
 ```
 
+### Potential issues
+
+Your local elasticsearch cluster becomes read-only if you're low on disk space.
+This makes creating tasks and projects fail.
+The elasticsearch container will emit logs similar to this.
+
+```json
+{
+  "type": "server",
+  "level": "WARN",
+  "component": "o.e.c.r.a.DiskThresholdMonitor",
+  "cluster.name": "docker-cluster",
+  "message": "flood stage disk watermark [95%] exceeded on [OZOgTVsrTlerKqoChHnhYw][3d7d5a8abd03][/usr/share/elasticsearch/data/nodes/0] free: 2.1gb[3%], all indices on this node will be marked read-only"
+}
+```
+
+In my experience it was caused by docker images and build cache filling up my
+root partition. These commands should help free up some space:
+
+```console
+docker system df           # check how much space docker is taking
+docker image prune -a      # remove all unused images
+docker build prune         # remove dangling build cache
+```
+
 ## Logs, Metrics and Monitoring
 
 Basic health info is available at

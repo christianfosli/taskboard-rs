@@ -32,6 +32,7 @@ services:
       ELASTIC_USERNAME: elastic
       ELASTIC_PASSWORD: secret
       ELASTIC_URL: http://es:9200
+      TASK_SERVICE_URL: http://tasksvc
   es:
     image: elasticsearch:7.10.1
     ports:

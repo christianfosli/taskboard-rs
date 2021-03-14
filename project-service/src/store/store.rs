@@ -11,6 +11,7 @@ pub trait ProjectStore {
     async fn get(&self, project_id: &Uuid) -> Result<Option<Project>, Error>;
     async fn search(&self, name: &str) -> Result<Vec<Project>, Error>;
     async fn persist(&self, project: &Project) -> Result<(), Error>;
+    async fn delete(&self, project_id: &Uuid) -> Result<(), Error>;
 }
 
 pub fn with_store(

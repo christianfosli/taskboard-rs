@@ -1,5 +1,6 @@
 use std::{cmp::Reverse, iter};
 
+use anyhow::anyhow;
 use taskboard_core_lib::{
     commands::{CreateTaskCommand, UpdateTaskCommand},
     uuid::Uuid,
@@ -15,7 +16,10 @@ use yew::{
 use super::taskbox::TaskBox;
 
 const TASK_SERVICE_URL: Option<&'static str> = option_env!("TASK_SERVICE_URL");
+const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
+// TODO: At the moment only FetchStatus::Failed is used to display errors to the user.
+// Meaning one must check console logs to tell what actually failed.
 pub struct Project {
     link: ComponentLink<Self>,
     id: Uuid,
@@ -38,6 +42,8 @@ pub enum Msg {
     Added(Task),
     Update(Task),
     UpdateSuccessful,
+    Delete,
+    Deleted,
     FetchCompleted(ProjectTasks),
     FetchFailed,
     ToggleShowCompleted,
@@ -147,6 +153,33 @@ impl Project {
 
         Ok(())
     }
+
+    fn delete_project(&mut self) -> Result<(), anyhow::Error> {
+        let window = web_sys::window().ok_or(anyhow!("Window was None"))?;
+
+        match window.confirm() {
+            Ok(conf) if conf == true => {
+                log::info!("Deleting project {}", self.title);
+                let req = Request::delete(&format!("{}/{}", PROJECT_SERVICE_URL.unwrap(), self.id))
+                    .body(Nothing)?;
+
+                let callback =
+                    self.link
+                        .callback(|res: Response<Result<String, anyhow::Error>>| {
+                            match res.status().is_success() {
+                                true => Msg::Deleted,
+                                false => Msg::FetchFailed,
+                            }
+                        });
+
+                self.ft = FetchService::fetch(req, callback).ok();
+            }
+            Ok(_) => log::info!("Delete project aborted"),
+            Err(e) => return Err(anyhow!(format!("{:?}", e))),
+        }
+
+        Ok(())
+    }
 }
 
 impl Component for Project {
@@ -196,6 +229,20 @@ impl Component for Project {
             }
             Msg::UpdateSuccessful => {
                 log::info!("{:?}", Msg::UpdateSuccessful);
+            }
+            Msg::Delete => {
+                self.delete_project()
+                    .unwrap_or_else(|e| log::error!("Error deleting project: {}", e));
+            }
+            Msg::Deleted => {
+                log::info!("Project deleted successfully. Redirecting to home.");
+
+                web_sys::window().map(|win| {
+                    win.location()
+                        .set_href("/")
+                        .unwrap_or_else(|e| log::error!("redirect error: {:?}", e))
+                });
+                return false;
             }
             Msg::FetchCompleted(tasks) => {
                 self.title = tasks.project_name;
@@ -275,6 +322,7 @@ impl Component for Project {
                 />
             </div>
             {task_list}
+            <button class="bg-danger" onclick=self.link.callback(|_| Msg::Delete)>{ "delete project" } </button>
             </>
         }
     }

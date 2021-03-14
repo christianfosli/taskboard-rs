@@ -1,15 +1,14 @@
+use crate::services::project_service::with_project_service;
 use warp::{Filter, Rejection, Reply};
 
 use crate::{
     handlers::task_completed::handle_task_completed,
     handlers::task_started::handle_task_started,
     handlers::{
-        health::handle_health,
-        task_create::{claim_task_number, handle_task_create},
-        task_delete::handle_task_delete,
-        task_list::handle_task_list,
-        task_update::handle_task_update,
+        health::handle_health, task_create::handle_task_create, task_delete::handle_task_delete,
+        task_list::handle_task_list, task_update::handle_task_update,
     },
+    services::project_service::IProjectService,
     store::with_store,
     store::TaskStore,
 };
@@ -22,19 +21,26 @@ pub fn health_check_route<T: TaskStore + Clone + Sync + Send>(
         .and_then(handle_health)
 }
 
-pub fn task_routes<T: TaskStore + Clone + Sync + Send>(
-    store: &T,
-) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+pub fn task_routes<TStore, TProjectService>(
+    store: &TStore,
+    project_service: &TProjectService,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone
+where
+    TStore: TaskStore + Clone + Sync + Send,
+    TProjectService: IProjectService + Clone + Sync + Send,
+{
     let get = warp::path!("project-tasks" / String)
         .and(warp::get())
         .and(with_store(store.clone()))
-        .and_then(|id, store| handle_task_list(store, id));
+        .and(with_project_service(project_service.clone()))
+        .and_then(|id, store, project_service| handle_task_list(store, project_service, id));
 
     let create = warp::path!("task" / "create")
         .and(warp::post())
         .and(with_store(store.clone()))
+        .and(with_project_service(project_service.clone()))
         .and(warp::body::json())
-        .and_then(|store, command| handle_task_create(store, claim_task_number, command));
+        .and_then(handle_task_create);
 
     let update = warp::path!("task" / "update")
         .and(warp::put())
@@ -71,7 +77,7 @@ mod tests {
         commands::CreateTaskCommand,
         commands::{CompleteTaskCommand, StartTaskCommand, UpdateTaskCommand},
         uuid::Uuid,
-        Status, Task,
+        Project, Status, Task,
     };
     use warp::hyper::StatusCode;
 
@@ -114,6 +120,20 @@ mod tests {
         }
     }
 
+    #[derive(Debug, Clone)]
+    struct MockProjectService {}
+
+    #[async_trait]
+    impl IProjectService for MockProjectService {
+        async fn get_project(&self, _: &Uuid) -> Result<taskboard_core_lib::Project, Error> {
+            Ok(Project::new("Mock project"))
+        }
+
+        async fn claim_task_number(&self, _: &Uuid) -> Result<usize, Error> {
+            Ok(3)
+        }
+    }
+
     #[tokio::test]
     async fn health_check_given_taskstore_up_should_be_ok() {
         let store = MockTaskStore { success: true };
@@ -147,10 +167,10 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore = "Requires project service until I find out how to mock"]
     async fn create_task_should_create() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let res = warp::test::request()
             .method("POST")
@@ -169,7 +189,8 @@ mod tests {
     #[tokio::test]
     async fn update_task_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let res = warp::test::request()
             .method("PUT")
@@ -192,7 +213,8 @@ mod tests {
     #[tokio::test]
     async fn delete_project_tasks_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let res = warp::test::request()
             .method("DELETE")
@@ -206,7 +228,8 @@ mod tests {
     #[tokio::test]
     async fn start_task_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let res = warp::test::request()
             .method("POST")
@@ -224,7 +247,8 @@ mod tests {
     #[tokio::test]
     async fn complete_task_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let res = warp::test::request()
             .method("POST")
@@ -242,7 +266,8 @@ mod tests {
     #[tokio::test]
     async fn get_for_project_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let routes = task_routes(&store);
+        let project_service = MockProjectService {};
+        let routes = task_routes(&store, &project_service);
 
         let some_project_id = Uuid::new_v4();
 

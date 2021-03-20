@@ -1,4 +1,6 @@
+use anyhow::anyhow;
 use taskboard_core_lib::Project;
+use url::Url;
 use yew::{
     format::{Json, Nothing},
     prelude::*,
@@ -26,6 +28,32 @@ pub enum Msg {
     SearchFailed(String),
 }
 
+impl SearchProject {
+    fn do_search(&mut self) -> Result<(), anyhow::Error> {
+        let base_url =
+            Url::parse(PROJECT_SERVICE_URL.ok_or(anyhow!("PROJECT_SERVICE_URL not set"))?)?;
+
+        let search_url = base_url.join("search/")?.join(&self.search_query)?;
+
+        Request::get(search_url.as_str()).body(Nothing).map(|req| {
+            let callback =
+                self.link
+                    .callback(|res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
+                        if let (meta, Json(Ok(body))) = res.into_parts() {
+                            if meta.status.is_success() {
+                                return Msg::SearchCompleted(body);
+                            }
+                        }
+                        Msg::SearchFailed(String::from("An error occured"))
+                    });
+
+            self.ft = FetchService::fetch(req, callback).ok();
+        })?;
+
+        Ok(())
+    }
+}
+
 impl Component for SearchProject {
     type Message = Msg;
 
@@ -47,27 +75,9 @@ impl Component for SearchProject {
             Msg::PerformSearch => {
                 self.matches = None;
 
-                Request::get(format!(
-                    "{}/search/{}",
-                    PROJECT_SERVICE_URL.unwrap(),
-                    self.search_query
-                ))
-                .body(Nothing)
-                .map(|req| {
-                    let callback = self.link.callback(
-                        |res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
-                            if let (meta, Json(Ok(body))) = res.into_parts() {
-                                if meta.status.is_success() {
-                                    return Msg::SearchCompleted(body);
-                                }
-                            }
-                            Msg::SearchFailed(String::from("An error occured"))
-                        },
-                    );
-
-                    self.ft = FetchService::fetch(req, callback).ok();
-                })
-                .unwrap_or_else(|err| self.link.send_message(Msg::SearchFailed(err.to_string())));
+                self.do_search().unwrap_or_else(|err| {
+                    self.link.send_message(Msg::SearchFailed(err.to_string()))
+                });
                 return false;
             }
             Msg::SearchCompleted(matches) => {

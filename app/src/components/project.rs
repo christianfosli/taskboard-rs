@@ -18,8 +18,6 @@ use super::taskbox::TaskBox;
 const TASK_SERVICE_URL: Option<&'static str> = option_env!("TASK_SERVICE_URL");
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
-// TODO: At the moment only FetchStatus::Failed is used to display errors to the user.
-// Meaning one must check console logs to tell what actually failed.
 pub struct Project {
     link: ComponentLink<Self>,
     id: Uuid,
@@ -27,9 +25,11 @@ pub struct Project {
     tasks: Option<Vec<Task>>,
     ft: Option<FetchTask>,
     fetch_status: FetchStatus,
+    error: Option<String>,
     show_completed: bool,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 enum FetchStatus {
     Loading,
     Completed,
@@ -41,11 +41,12 @@ pub enum Msg {
     Add,
     Added(Task),
     Update(Task),
-    UpdateSuccessful,
+    Updated(Task),
     Delete,
     Deleted,
-    FetchCompleted(ProjectTasks),
-    FetchFailed,
+    FetchTasksCompleted(ProjectTasks),
+    FetchTasksFailed,
+    SetError(String),
     ToggleShowCompleted,
 }
 
@@ -68,10 +69,10 @@ impl Project {
                     |res: Response<Json<Result<ProjectTasks, anyhow::Error>>>| {
                         if let (meta, Json(Ok(body))) = res.into_parts() {
                             if meta.status.is_success() {
-                                return Msg::FetchCompleted(body);
+                                return Msg::FetchTasksCompleted(body);
                             }
                         }
-                        Msg::FetchFailed
+                        Msg::FetchTasksFailed
                     },
                 );
 
@@ -116,11 +117,12 @@ impl Project {
             .link
             .callback(|res: Response<Json<Result<Task, anyhow::Error>>>| {
                 if let (meta, Json(Ok(body))) = res.into_parts() {
-                    if meta.status.is_success() {
-                        return Msg::Added(body);
-                    }
+                    return match meta.status.is_success() {
+                        true => Msg::Added(body),
+                        false => Msg::SetError(format!("Add task failed with {:?}", meta.status)),
+                    };
                 }
-                Msg::FetchFailed
+                Msg::SetError("An error occured when adding task".to_owned())
             });
 
         self.ft = FetchService::fetch(req, callback).ok();
@@ -128,7 +130,7 @@ impl Project {
         Ok(())
     }
 
-    fn update_task(&mut self, task: &Task) -> Result<(), anyhow::Error> {
+    fn update_task(&mut self, task: Task) -> Result<(), anyhow::Error> {
         log::info!("Updating task {}...", task.number);
 
         let command = UpdateTaskCommand {
@@ -142,10 +144,10 @@ impl Project {
 
         let callback = self
             .link
-            .callback(|res: Response<Result<String, anyhow::Error>>| {
+            .callback(move |res: Response<Result<String, anyhow::Error>>| {
                 match res.status().is_success() {
-                    true => Msg::UpdateSuccessful,
-                    false => Msg::FetchFailed,
+                    true => Msg::Updated(task.clone()),
+                    false => Msg::SetError(format!("Update task failed due to {:?}", res.status())),
                 }
             });
 
@@ -168,7 +170,10 @@ impl Project {
                         .callback(|res: Response<Result<String, anyhow::Error>>| {
                             match res.status().is_success() {
                                 true => Msg::Deleted,
-                                false => Msg::FetchFailed,
+                                false => Msg::SetError(format!(
+                                    "Delete project failed due to {:?}",
+                                    res.status()
+                                )),
                             }
                         });
 
@@ -193,25 +198,35 @@ impl Component for Project {
             tasks: None,
             ft: None,
             fetch_status: FetchStatus::Loading,
+            error: None,
             show_completed: false,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Add => self
-                .add_task()
-                .unwrap_or_else(|e| log::error!("Error adding task: {:?}", e)),
+            Msg::Add => {
+                self.add_task().unwrap_or_else(|e| {
+                    self.link
+                        .send_message(Msg::SetError(format!("Error adding task: {:?}", e)))
+                });
+                return false;
+            }
             Msg::Added(task) => {
                 self.tasks = Some(match self.tasks.clone() {
                     Some(t) => t.into_iter().chain(iter::once(task)).collect(),
                     None => vec![task],
                 });
+                self.error = None;
             }
             Msg::Update(task) => {
-                self.update_task(&task)
-                    .unwrap_or_else(|e| log::error!("Error updating task: {}", e));
-
+                self.update_task(task).unwrap_or_else(|e| {
+                    self.link
+                        .send_message(Msg::SetError(format!("Error updating task: {:?}", e)))
+                });
+                return false;
+            }
+            Msg::Updated(task) => {
                 self.tasks = Some(
                     self.tasks
                         .clone()
@@ -225,33 +240,39 @@ impl Component for Project {
                             }
                         })
                         .collect(),
-                )
-            }
-            Msg::UpdateSuccessful => {
-                log::info!("{:?}", Msg::UpdateSuccessful);
+                );
+                self.error = None;
             }
             Msg::Delete => {
-                self.delete_project()
-                    .unwrap_or_else(|e| log::error!("Error deleting project: {}", e));
+                self.delete_project().unwrap_or_else(|e| {
+                    self.link
+                        .send_message(Msg::SetError(format!("Error deleting project: {:?}", e)))
+                });
+                return false;
             }
             Msg::Deleted => {
                 log::info!("Project deleted successfully. Redirecting to home.");
 
                 web_sys::window().map(|win| {
-                    win.location()
-                        .set_href("/")
-                        .unwrap_or_else(|e| log::error!("redirect error: {:?}", e))
+                    win.location().set_href("/").unwrap_or_else(|e| {
+                        self.link
+                            .send_message(Msg::SetError(format!("redirect error: {:?}", e)))
+                    })
                 });
-                return false;
             }
-            Msg::FetchCompleted(tasks) => {
+            Msg::FetchTasksCompleted(tasks) => {
                 self.title = tasks.project_name;
                 self.tasks = Some(tasks.tasks);
                 self.fetch_status = FetchStatus::Completed;
             }
-            Msg::FetchFailed => {
-                log::warn!("{:?}", Msg::FetchFailed);
+            Msg::FetchTasksFailed => {
                 self.fetch_status = FetchStatus::Failed;
+                self.link
+                    .send_message(Msg::SetError("Failed to fetch tasks 😭".to_owned()));
+            }
+            Msg::SetError(error) => {
+                log::error!("{}", error);
+                self.error = Some(error);
             }
             Msg::ToggleShowCompleted => self.show_completed = !self.show_completed,
         }
@@ -261,12 +282,6 @@ impl Component for Project {
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         log::warn!("Not re-rendering on project change");
         false
-    }
-
-    fn rendered(&mut self, first_render: bool) {
-        if first_render {
-            self.fetch_tasks();
-        }
     }
 
     fn view(&self) -> Html {
@@ -295,21 +310,23 @@ impl Component for Project {
                 {tasks.map(|t| to_taskbox(&t)).collect::<Html>()}
                 </ul>
             },
+            None if self.fetch_status == FetchStatus::Loading => html! {
+                <p>{ "Loading tasks..." }</p>
+            },
             None => html! {
                 <ul></ul>
             },
         };
 
-        let status_message = match self.fetch_status {
-            FetchStatus::Loading => "Loading...",
-            FetchStatus::Completed => "",
-            FetchStatus::Failed => "Failed to fetch tasks 😭",
+        let error_box = match &self.error {
+            Some(e) => html! { <div class="error"> { e } </div> },
+            None => html! { <> </> },
         };
 
         html! {
             <>
             <h3>{ &format!("Taskboard for {}", self.title) }</h3>
-            <div class="error">{ status_message }</div>
+            {error_box}
             <button id="newtask-btn" onclick=self.link.callback(|_| Msg::Add)>{ "new"} </button>
             <div>
                 <label for="show-completed">{ "Show completed" }</label>
@@ -324,6 +341,12 @@ impl Component for Project {
             {task_list}
             <button class="bg-danger" onclick=self.link.callback(|_| Msg::Delete)>{ "delete project" } </button>
             </>
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.fetch_tasks();
         }
     }
 

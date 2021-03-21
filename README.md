@@ -102,5 +102,5 @@ root partition. These commands should help free up some space:
 ```console
 docker system df           # check how much space docker is taking
 docker image prune -a      # remove all unused images
-docker build prune         # remove dangling build cache
+docker builder prune         # remove dangling build cache
 ```

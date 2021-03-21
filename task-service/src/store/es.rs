@@ -135,7 +135,12 @@ impl TaskStore for Elasticsearch {
             }))
             .send()
             .await?;
-        res.error_for_status_code()?;
+
+        if res.status_code() == StatusCode::NOT_FOUND {
+            tracing::info!("No tasks found. Nothing to do.");
+        } else {
+            res.error_for_status_code()?;
+        }
         Ok(())
     }
 }

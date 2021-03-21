@@ -1,5 +1,6 @@
 use std::env;
 
+use errors::handle_rejection;
 use services::project_service::ProjectService;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::Filter;
@@ -24,6 +25,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let routes = routes::task_routes(&es_client, &project_service_client)
         .or(routes::health_check_route(&es_client))
+        .recover(handle_rejection)
         .with(cors::cors())
         .with(warp::trace::request());
 

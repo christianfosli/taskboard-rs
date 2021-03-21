@@ -986,6 +986,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "elasticsearch",
+ "percent-encoding",
  "reqwest",
  "serde",
  "serde_json",

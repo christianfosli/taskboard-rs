@@ -3,7 +3,7 @@ kind: Elasticsearch
 metadata:
   name: taskboard
 spec:
-  version: 7.10.1
+  version: 7.11.2
   nodeSets:
   - name: default
     count: 1

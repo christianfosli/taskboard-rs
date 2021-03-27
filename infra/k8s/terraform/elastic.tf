@@ -9,7 +9,7 @@ resource "helm_release" "eckOperator" {
   namespace   = kubernetes_namespace.elasticNamespace.metadata.0.name
   repository  = "https://helm.elastic.co"
   chart       = "eck-operator"
-  version     = "~>1.3"
+  version     = "~>1.5"
   max_history = 5
 }
 

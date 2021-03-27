@@ -97,7 +97,7 @@ resource "kubectl_manifest" "linkerdIdentityIssuerIssuer" {
 
 resource "kubectl_manifest" "linkerdIdentityIssuerCert" {
   yaml_body  = file("linkerd-issuer-cert.yaml")
-  depends_on = kubectl_manifest.linkerdIdentityIssuerIssuer
+  depends_on = [kubectl_manifest.linkerdIdentityIssuerIssuer]
 }
 
 # This one is created by the resource above. We need its value to `helm install` linkerd.

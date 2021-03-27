@@ -61,8 +61,8 @@ resource "tls_private_key" "linkerdTrustAnchor" {
 }
 
 resource "tls_self_signed_cert" "linkerdTrustAnchor" {
-  key_algorithm         = tls_private_key.linkerdCaKey.algorithm
-  private_key_pem       = tls_private_key.linkerdCaKey.private_key_pem
+  key_algorithm         = tls_private_key.linkerdTrustAnchor.algorithm
+  private_key_pem       = tls_private_key.linkerdTrustAnchor.private_key_pem
   validity_period_hours = 17520
   is_ca_certificate     = true
 

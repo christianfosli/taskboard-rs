@@ -11,11 +11,6 @@ resource "helm_release" "ingressNginx" {
   chart       = "ingress-nginx"
   version     = "~>3.25"
   max_history = 5
-
-  set {
-    name  = "controller.metrics.enabled"
-    value = true
-  }
 }
 
 resource "kubectl_manifest" "appIngress" {

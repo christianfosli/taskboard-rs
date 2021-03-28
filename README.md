@@ -12,10 +12,10 @@ A Kanban inspired board for managing tasks/todo's and tracking progress.
 Visit [https://www.taskboard.cloud](https://www.taskboard.cloud) to try it out!
 
 This application is mostly a proof-of-concept of full-stack development with Rust.
-It's also a nice chance for me to play with rust, docker, kubernetes and elasticsearch.
+It's also my personal playground for testing out web development with rust,
+and kubernetes, and elasticsearch.
 
-Elasticsearch might be a weird choice for persisting data.
-I chose it simply to learn more about it.
+Elasticsearch might be a weird choice for persisting data. I chose it to learn more about it.
 
 ## Architecture Overview
 
@@ -23,11 +23,16 @@ Here's a high level overview of the different services:
 
 ![Architecture overview of taskboard.cloud](architecture-overview.svg)
 
-## Logs, Metrics and Monitoring
+## Metrics and Monitoring
 
 Basic health info is available at
-[https://www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
-More detailed metrics are password protected. LMK if you need access.
+[www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
+
+More detailed metrics are available on [metrics.taskboard.cloud](https://metrics.taskboard.cloud).
+These are password protected. Let me know if you need would like access.
+
+Note that I'm running all of this on a **single-node cheap-ish AKS cluster**.
+Thus there might be some unreliability, especially when I try out something new.
 
 ## Development
 
@@ -102,5 +107,5 @@ root partition. These commands should help free up some space:
 ```console
 docker system df           # check how much space docker is taking
 docker image prune -a      # remove all unused images
-docker builder prune         # remove dangling build cache
+docker builder prune       # remove dangling build cache
 ```

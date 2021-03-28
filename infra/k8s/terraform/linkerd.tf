@@ -1,6 +1,9 @@
 resource "kubernetes_namespace" "linkerdNamespace" {
   metadata {
     name = "linkerd"
+    labels = {
+      "config.linkerd.io/admission-webhooks" = "disabled"
+    }
   }
 }
 
@@ -14,7 +17,7 @@ resource "helm_release" "linkerd" {
 
   set {
     name  = "identityTrustAnchorsPEM"
-    value = data.kubernetes_secret.linkerdIdentityIssuer.data["tls.crt"]
+    value = tls_self_signed_cert.linkerdTrustAnchor.cert_pem
   }
 
   set {
@@ -30,15 +33,8 @@ resource "helm_release" "linkerd" {
 
 # --- Linkerd Viz ---
 
-resource "kubernetes_namespace" "linkerdVizNamespace" {
-  metadata {
-    name = "linkerd-viz"
-  }
-}
-
 resource "helm_release" "linkerdViz" {
   name        = "linkerd-viz"
-  namespace   = kubernetes_namespace.linkerdVizNamespace.metadata.0.name
   repository  = "https://helm.linkerd.io/stable"
   chart       = "linkerd-viz"
   version     = "~>0.1"
@@ -46,8 +42,6 @@ resource "helm_release" "linkerdViz" {
 
   depends_on = [helm_release.linkerd]
 }
-
-# TODO: Inject pods and expose dashboard
 
 # --- TLS ---
 
@@ -94,12 +88,4 @@ resource "kubectl_manifest" "linkerdIdentityIssuerIssuer" {
 resource "kubectl_manifest" "linkerdIdentityIssuerCert" {
   yaml_body  = file("linkerd-issuer-cert.yaml")
   depends_on = [kubectl_manifest.linkerdIdentityIssuerIssuer]
-}
-
-# This one is created by the resource above. We need its value to `helm install` linkerd.
-data "kubernetes_secret" "linkerdIdentityIssuer" {
-  metadata {
-    name = "linkerd-identity-issuer"
-  }
-  depends_on = [kubectl_manifest.linkerdIdentityIssuerCert]
 }

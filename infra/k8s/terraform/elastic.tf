@@ -18,6 +18,16 @@ resource "helm_release" "eckOperator" {
   }
 
   set {
+    name  = "podAnnotations.config\\.linkerd\\.io/proxy-cpu-request"
+    value = "10m"
+  }
+
+  set {
+    name  = "podAnnotations.config\\.linkerd\\.io/proxy-memory-request"
+    value = "5Mi"
+  }
+
+  set {
     name  = "podAnnotations.kubectl\\.kubernetes\\.io/default-logs-container"
     value = "manager"
   }

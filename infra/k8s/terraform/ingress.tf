@@ -18,6 +18,16 @@ resource "helm_release" "ingressNginx" {
   }
 
   set {
+    name  = "controller.podAnnotations.config\\.linkerd\\.io/proxy-cpu-request"
+    value = "10m"
+  }
+
+  set {
+    name  = "controller.podAnnotations.config\\.linkerd\\.io/proxy-memory-request"
+    value = "5Mi"
+  }
+
+  set {
     name  = "controller.podAnnotations.kubectl\\.kubernetes\\.io/default-logs-container"
     value = "controller"
   }

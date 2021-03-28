@@ -1,3 +1,8 @@
+variable "LINKERD_VERSION" {
+  default     = "~>2.10.0"
+  description = "The version of Linkerd to install"
+}
+
 resource "kubernetes_namespace" "linkerdNamespace" {
   metadata {
     name = "linkerd"
@@ -12,7 +17,7 @@ resource "helm_release" "linkerd" {
   namespace   = kubernetes_namespace.linkerdNamespace.metadata.0.name
   repository  = "https://helm.linkerd.io/stable"
   chart       = "linkerd2"
-  version     = "~>2.10"
+  version     = var.LINKERD_VERSION
   max_history = 5
 
   set {
@@ -37,7 +42,7 @@ resource "helm_release" "linkerdViz" {
   name        = "linkerd-viz"
   repository  = "https://helm.linkerd.io/stable"
   chart       = "linkerd-viz"
-  version     = "~>0.1"
+  version     = var.LINKERD_VERSION
   max_history = 5
 
   depends_on = [helm_release.linkerd]

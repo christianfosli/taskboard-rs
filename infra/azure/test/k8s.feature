@@ -31,6 +31,7 @@ Feature: Azure Kubernetes Service
       | vm_size              | Standard_B2s |
       | orchestrator_version | 1.19.6       |
       | os_disk_size_gb      | 32           |
+      | max_pods             | 50           |
 
 
   Scenario: AKS Network Profile should use cheap load balancer

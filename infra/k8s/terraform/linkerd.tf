@@ -75,7 +75,7 @@ resource "tls_self_signed_cert" "linkerdTrustAnchor" {
 resource "kubernetes_secret" "linkerdTrustAnchor" {
   metadata {
     name      = "linkerd-trust-anchor"
-    namespace = "linkerd"
+    namespace = kubernetes_namespace.linkerdNamespace.metadata.0.name
   }
 
   type = "kubernetes.io/tls"

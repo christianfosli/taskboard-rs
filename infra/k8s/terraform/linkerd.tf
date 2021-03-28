@@ -26,8 +26,6 @@ resource "helm_release" "linkerd" {
     name  = "installNamespace"
     value = "false"
   }
-
-  depends_on = [kubectl_manifest.linkerdIdentityIssuerCert]
 }
 
 # --- Linkerd Viz ---
@@ -48,8 +46,6 @@ resource "helm_release" "linkerdViz" {
 
   depends_on = [helm_release.linkerd]
 }
-
-# --- Expose Dashboard
 
 # TODO: Inject pods and expose dashboard
 
@@ -105,4 +101,5 @@ data "kubernetes_secret" "linkerdIdentityIssuer" {
   metadata {
     name = "linkerd-identity-issuer"
   }
+  depends_on = [kubectl_manifest.linkerdIdentityIssuerCert]
 }

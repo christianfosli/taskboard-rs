@@ -21,7 +21,7 @@ data "azurerm_resource_group" "rg" {
 
 # --- The load balancer is provisioned by kubernetes ---
 
-#data "azurerm_lb" "aksloadbalancer" {
-#  name                = "kubernetes"
-#  resource_group_name = azurerm_kubernetes_cluster.k8s.node_resource_group
-#}
+data "azurerm_lb" "aksloadbalancer" {
+  name                = "kubernetes"
+  resource_group_name = azurerm_kubernetes_cluster.k8s.node_resource_group
+}

@@ -34,7 +34,7 @@ spec:
             limits:
               memory: 1Gi
               cpu: 1
-        automountServiceToken: true
+        automountServiceAccountToken: true
   updateStrategy:
     changeBudget:
       # I don't have enough memory to scale up during rolling upgrade

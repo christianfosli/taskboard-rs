@@ -4,6 +4,10 @@ metadata:
   name: taskboard
 spec:
   version: 7.12.0
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
   nodeSets:
   - name: default
     count: 1
@@ -13,6 +17,9 @@ spec:
       node.ingest: true
       node.store.allow_mmap: false
     podTemplate:
+      metadata:
+        annotations:
+          linkerd.io/inject: enabled
       spec:
         containers:
         - name: elasticsearch
@@ -26,6 +33,7 @@ spec:
             limits:
               memory: 1Gi
               cpu: 1
+        automountServiceToken: true
   updateStrategy:
     changeBudget:
       # I don't have enough memory to scale up during rolling upgrade

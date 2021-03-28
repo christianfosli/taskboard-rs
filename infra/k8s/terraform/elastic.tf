@@ -11,6 +11,11 @@ resource "helm_release" "eckOperator" {
   chart       = "eck-operator"
   version     = "~>1.5"
   max_history = 5
+
+  set {
+    name  = "podAnnotations"
+    value = "linkerd.io/inject: enabled"
+  }
 }
 
 # --- The below resources should ideally be put into a separate namespace

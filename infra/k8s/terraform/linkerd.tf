@@ -68,14 +68,14 @@ resource "kubernetes_secret" "linkerdDashboardBasicAuth" {
     name      = "web-ingress-auth"
     namespace = data.kubernetes_namespace.linkerdVizNamespace.metadata.0.name
   }
-  data {
+  data = {
     auth = "admin:${bcrypt(random_password.linkerdDashboardPass.result)}"
   }
 }
 
-resource "kubectl_manifest" "metricsIngress" {
+resource "kubectl_manifest" "linkerdDashboardIngress" {
   yaml_body = templatefile("metrics-ingress.yaml", {
-    secret          = kubernetes_secret.metricsBasicAuth.metadata.0.name
+    secret          = kubernetes_secret.linkerdDashboardBasicAuth.metadata.0.name
     namespace       = data.kubernetes_namespace.linkerdVizNamespace.metadata.0.name
     servicename     = "web"
     serviceportname = "http"

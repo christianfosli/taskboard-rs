@@ -21,6 +21,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: web
+            name: ${servicename}
             port:
-              number: 8084
+              name: ${serviceportname}

@@ -48,7 +48,41 @@ resource "helm_release" "linkerdViz" {
   depends_on = [helm_release.linkerd]
 }
 
-# --- TLS ---
+data "kubernetes_namespace" "linkerdVizNamespace" {
+  metadata {
+    name = "linkerd-viz"
+  }
+  depends_on = [helm_release.linkerdViz]
+}
+
+# --- Expose dashboard through ingress
+
+resource "random_password" "linkerdDashboardPass" {
+  length           = 32
+  special          = true
+  override_special = "_%@"
+}
+
+resource "kubernetes_secret" "linkerdDashboardBasicAuth" {
+  metadata {
+    name      = "web-ingress-auth"
+    namespace = data.kubernetes_namespace.linkerdVizNamespace.metadata.0.name
+  }
+  data {
+    auth = "admin:${bcrypt(random_password.linkerdDashboardPass.result)}"
+  }
+}
+
+resource "kubectl_manifest" "metricsIngress" {
+  yaml_body = templatefile("metrics-ingress.yaml", {
+    secret          = kubernetes_secret.metricsBasicAuth.metadata.0.name
+    namespace       = data.kubernetes_namespace.linkerdVizNamespace.metadata.0.name
+    servicename     = "web"
+    serviceportname = "http"
+  })
+}
+
+# --- Control plane TLS ---
 
 resource "tls_private_key" "linkerdTrustAnchor" {
   algorithm   = "ECDSA"

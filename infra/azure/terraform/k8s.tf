@@ -10,6 +10,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     node_count           = var.AKS_NODE_POOL["node_count"]
     vm_size              = var.AKS_NODE_POOL["vm_size"]
     os_disk_size_gb      = var.AKS_NODE_POOL["os_disk_size_gb"]
+    max_pods             = var.AKS_NODE_POOL["max_size"]
     orchestrator_version = var.K8S_VERSION
   }
 

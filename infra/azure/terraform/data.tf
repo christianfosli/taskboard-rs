@@ -11,6 +11,7 @@ variable "AKS_NODE_POOL" {
     node_count      = 1
     vm_size         = "Standard_B2s"
     os_disk_size_gb = 32
+    max_pods        = 50
   }
 }
 

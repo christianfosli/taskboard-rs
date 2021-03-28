@@ -26,6 +26,9 @@ spec:
     metadata:
       labels:
         app: taskboard-app
+      annotations:
+        linkerd.io/inject: enabled
+        kubectl.kubernetes.io/default-logs-container: taskboard-app
     spec:
       containers:
       - name: taskboard-app

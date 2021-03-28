@@ -26,6 +26,9 @@ spec:
     metadata:
       labels:
         app: project
+      annotations:
+        linkerd.io/inject: enabled
+        kubectl.kubernetes.io/default-logs-container: project
     spec:
       containers:
       - name: project

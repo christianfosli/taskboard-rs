@@ -13,8 +13,13 @@ resource "helm_release" "eckOperator" {
   max_history = 5
 
   set {
-    name  = "podAnnotations"
-    value = "linkerd.io/inject: enabled"
+    name  = "podAnnotations.linkerd\\.io/inject"
+    value = "enabled"
+  }
+
+  set {
+    name  = "podAnnotations.kubectl\\.kubernetes\\.io/default-logs-container"
+    value = "manager"
   }
 }
 

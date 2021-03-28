@@ -26,6 +26,9 @@ spec:
     metadata:
       labels:
         app: task
+      annotations:
+        linkerd.io/inject: enabled
+        kubectl.kubernetes.io/default-logs-container: task
     spec:
       containers:
       - name: task

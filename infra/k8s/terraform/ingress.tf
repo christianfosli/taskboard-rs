@@ -13,8 +13,13 @@ resource "helm_release" "ingressNginx" {
   max_history = 5
 
   set {
-    name  = "controller.podAnnotations"
-    value = "linkerd.io/inject: enabled"
+    name  = "controller.podAnnotations.linkerd\\.io/inject"
+    value = "enabled"
+  }
+
+  set {
+    name  = "controller.podAnnotations.kubectl\\.kubernetes\\.io/default-logs-container"
+    value = "controller"
   }
 }
 

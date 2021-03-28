@@ -7,6 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: ${secret}
     nginx.ingress.kubernetes.io/auth-realm: 'Authentication is required to view detailed metrics'
+    nginx.ingress.kubernetes.io/upstream-vhost: $service_name.$namespace.svc.cluster.local:8084
 spec:
   ingressClassName: nginx
   tls:

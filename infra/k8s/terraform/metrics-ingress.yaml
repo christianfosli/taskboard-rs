@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: metrics-ingress
+  namespace: ${namespace}
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: ${secret}
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication is required to view detailed metrics'
+    nginx.ingress.kubernetes.io/upstream-vhost: $service_name.$namespace.svc.cluster.local:8084
+spec:
+  ingressClassName: nginx
+  tls:
+  - host:
+    - metrics.taskboard.cloud
+    secretName: tls-cert
+  rules:
+  - host: metrics.taskboard.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ${servicename}
+            port:
+              name: ${serviceportname}

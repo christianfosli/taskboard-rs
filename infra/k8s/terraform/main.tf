@@ -8,7 +8,7 @@ terraform {
 
   required_providers {
     azurerm = {
-      version = "~>2.41"
+      version = "~>2.53"
     }
 
     helm = {
@@ -17,11 +17,15 @@ terraform {
 
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = "~>1.9"
+      version = "~>1.10"
     }
 
     kubernetes = {
-      version = "~>1.13"
+      version = "~>2.0"
+    }
+
+    tls = {
+      version = "~>3.1"
     }
   }
 }

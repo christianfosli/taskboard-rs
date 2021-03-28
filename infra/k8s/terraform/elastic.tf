@@ -11,6 +11,16 @@ resource "helm_release" "eckOperator" {
   chart       = "eck-operator"
   version     = "~>1.5"
   max_history = 5
+
+  set {
+    name  = "podAnnotations.linkerd\\.io/inject"
+    value = "enabled"
+  }
+
+  set {
+    name  = "podAnnotations.kubectl\\.kubernetes\\.io/default-logs-container"
+    value = "manager"
+  }
 }
 
 # --- The below resources should ideally be put into a separate namespace

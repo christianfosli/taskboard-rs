@@ -16,6 +16,20 @@ Feature: DNS and Custom Domain
       | resource_group_name | rg-taskboard    |
 
 
+  Scenario Outline: DNS A Record - root alias to www
+    Given I have azurerm_dns_a_record defined
+    When its address is azurerm_dns_a_record.root
+    Then it must contain <key>
+    And its value must be <value>
+
+    Examples:
+      | key                 | value           |
+      | name                | @               |
+      | zone_name           | taskboard.cloud |
+      | resource_group_name | rg-taskboard    |
+      | ttl                 | 600             |
+
+
   Scenario Outline: DNS A Record - www
     Given I have azurerm_dns_a_record defined
     When its address is azurerm_dns_a_record.www

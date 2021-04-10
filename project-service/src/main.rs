@@ -1,8 +1,10 @@
 use std::env;
 
+use errors::handle_rejection;
 use tracing_subscriber::fmt::format::FmtSpan;
 use warp::Filter;
 mod cors;
+mod errors;
 mod handlers;
 mod routes;
 mod services;
@@ -30,15 +32,4 @@ async fn main() -> Result<(), anyhow::Error> {
     warp::serve(routes).run(([0, 0, 0, 0], 80)).await;
 
     Ok(())
-}
-
-/// Work-around for CORS not working on rejected requests (warp issue #518)
-async fn handle_rejection(
-    err: warp::Rejection,
-) -> Result<impl warp::Reply, std::convert::Infallible> {
-    tracing::error!("{:?}", err);
-    Ok(warp::reply::with_status(
-        format!("{:?}", err),
-        reqwest::StatusCode::INTERNAL_SERVER_ERROR,
-    ))
 }

@@ -1,3 +1,4 @@
+use crate::errors::ValidationError;
 use taskboard_core_lib::uuid::Uuid;
 use tracing::{error, info};
 use warp::{
@@ -16,18 +17,20 @@ pub async fn handle_delete_project(
 ) -> Result<impl Reply, Rejection> {
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
         error!("Failed to parse project id: {:?}", e);
-        reject::custom(DeleteProjectError::ParseError)
+        reject::custom(DeleteProjectError::Validation(ValidationError {
+            reason: format!("Project id {} is not a valid uuid", &project_id),
+        }))
     })?;
 
     task_service.delete_tasks(&project_id).await.map_err(|e| {
         error!("Failed to delete tasks for project: {:?}", e);
-        reject::custom(DeleteProjectError::RemoveRelatedTasksError)
+        reject::custom(DeleteProjectError::RemoveRelatedTasks)
     })?;
     info!("Related tasks deleted successfully");
 
     store.delete(&project_id).await.map_err(|e| {
         error!("Failed to delete project id from store: {:?}", e);
-        reject::custom(DeleteProjectError::RemoveFromStoreError)
+        reject::custom(DeleteProjectError::RemoveFromStore)
     })?;
     info!("Project deleted successfully");
 
@@ -36,9 +39,9 @@ pub async fn handle_delete_project(
 
 #[derive(Clone, Debug)]
 enum DeleteProjectError {
-    ParseError,
-    RemoveRelatedTasksError,
-    RemoveFromStoreError,
+    Validation(ValidationError),
+    RemoveRelatedTasks,
+    RemoveFromStore,
 }
 
 impl Reject for DeleteProjectError {}

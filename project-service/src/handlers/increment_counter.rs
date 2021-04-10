@@ -5,21 +5,25 @@ use warp::{
     reply, Rejection, Reply,
 };
 
-use crate::store::ProjectStore;
+use crate::{errors::ValidationError, store::ProjectStore};
 
 pub async fn handle_increment_counter(
     store: impl ProjectStore,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
-    let project_id =
-        Uuid::parse_str(&project_id).map_err(|_| reject::custom(ValidationError {}))?;
+    let project_id = Uuid::parse_str(&project_id).map_err(|e| {
+        error!("Failed to parse project id: {:?}", e);
+        reject::custom(IncrementCounterError::Validation(ValidationError {
+            reason: format!("Project id {} is not a valid uuid", &project_id),
+        }))
+    })?;
 
     let project = store
         .get(&project_id)
         .await
         .map_err(|e| {
             error!("Failed to get project {} from store: {}", project_id, e);
-            reject::custom(IncrementCounterError {})
+            reject::custom(IncrementCounterError::GetProject)
         })?
         .ok_or(reject::not_found())?;
 
@@ -30,16 +34,17 @@ pub async fn handle_increment_counter(
 
     store.persist(&project).await.map_err(|e| {
         error!("Failed to persist project: {}", e);
-        reject::custom(IncrementCounterError {})
+        reject::custom(IncrementCounterError::SaveChanges)
     })?;
 
     Ok(reply::json(&project))
 }
 
 #[derive(Clone, Debug)]
-struct ValidationError {}
-impl Reject for ValidationError {}
+enum IncrementCounterError {
+    Validation(ValidationError),
+    GetProject,
+    SaveChanges,
+}
 
-#[derive(Clone, Debug)]
-struct IncrementCounterError {}
 impl Reject for IncrementCounterError {}

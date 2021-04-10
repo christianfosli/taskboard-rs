@@ -1,7 +1,8 @@
 use std::convert::Infallible;
 
 use reqwest::StatusCode;
-use warp::{body::BodyDeserializeError, reject::Reject, Reply};
+use taskboard_core_lib::ErrorMessage;
+use warp::{body::BodyDeserializeError, reject::Reject, reply::json, Reply};
 
 #[derive(Clone, Debug)]
 pub struct PersistError {
@@ -44,5 +45,10 @@ pub async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, Infall
         StatusCode::INTERNAL_SERVER_ERROR
     };
 
-    Ok(warp::reply::with_status(format!("{:?}", err), status_code))
+    let body = json(&ErrorMessage {
+        message: format!("{:?}", err),
+        status_code: status_code.as_u16(),
+    });
+
+    Ok(warp::reply::with_status(body, status_code))
 }

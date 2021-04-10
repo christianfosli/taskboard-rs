@@ -2,37 +2,16 @@ use std::convert::Infallible;
 
 use reqwest::StatusCode;
 use taskboard_core_lib::ErrorMessage;
-use warp::{body::BodyDeserializeError, reject::Reject, reply::json, Reply};
+use warp::body::BodyDeserializeError;
 
 #[derive(Clone, Debug)]
-pub struct PersistError {
-    pub reason: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct FetchError {
-    pub reason: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct DeleteError {
-    pub reason: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
 pub struct ValidationError {
     pub reason: String,
 }
 
-impl Reject for PersistError {}
-impl Reject for FetchError {}
-impl Reject for DeleteError {}
-impl Reject for ValidationError {}
-
 /// Maps exceptions to a status code
-/// also used to make CORS behave as it should for rejected requests
-/// see https://github.com/seanmonstar/warp/issues/518
-pub async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, Infallible> {
+/// Also fix for CORS on rejected requests (warp issue #518)
+pub async fn handle_rejection(err: warp::Rejection) -> Result<impl warp::Reply, Infallible> {
     tracing::error!("{:?}", err);
 
     let status_code = if err.is_not_found() {
@@ -45,7 +24,7 @@ pub async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, Infall
         StatusCode::INTERNAL_SERVER_ERROR
     };
 
-    let body = json(&ErrorMessage {
+    let body = warp::reply::json(&ErrorMessage {
         message: format!("{:?}", err),
         status_code: status_code.as_u16(),
     });

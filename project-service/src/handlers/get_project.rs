@@ -5,30 +5,34 @@ use warp::{
     reply, Rejection, Reply,
 };
 
-use crate::store::ProjectStore;
+use crate::{errors::ValidationError, store::ProjectStore};
 
 pub async fn handle_get_project(
     store: impl ProjectStore,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
-    let project_id =
-        Uuid::parse_str(&project_id).map_err(|_| reject::custom(ValidationError {}))?;
+    let project_id = Uuid::parse_str(&project_id).map_err(|e| {
+        error!("Failed to parse project id: {:?}", e);
+        reject::custom(GetProjectError::Validation(ValidationError {
+            reason: format!("Project id {} is not a valid uuid", &project_id),
+        }))
+    })?;
 
     store
         .get(&project_id)
         .await
         .map_err(|e| {
             error!("Failed to get project {} from store: {}", project_id, e);
-            reject::custom(GetProjectError {})
+            reject::custom(GetProjectError::FetchProject)
         })?
         .and_then(|v| Some(reply::json(&v)))
         .ok_or(reject::not_found())
 }
 
 #[derive(Clone, Debug)]
-struct ValidationError {}
-impl Reject for ValidationError {}
+enum GetProjectError {
+    Validation(ValidationError),
+    FetchProject,
+}
 
-#[derive(Clone, Debug)]
-struct GetProjectError {}
 impl Reject for GetProjectError {}

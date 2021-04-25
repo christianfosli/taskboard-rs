@@ -19,6 +19,11 @@ pub struct DeleteError {
     pub reason: String,
 }
 
+#[derive(Debug)]
+pub struct PingStoreError {
+    pub inner_error: anyhow::Error,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ValidationError {
     pub reason: String,
@@ -27,6 +32,7 @@ pub struct ValidationError {
 impl Reject for PersistError {}
 impl Reject for FetchError {}
 impl Reject for DeleteError {}
+impl Reject for PingStoreError {}
 impl Reject for ValidationError {}
 
 /// Maps exceptions to a status code

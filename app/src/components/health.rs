@@ -34,7 +34,7 @@ pub enum Status {
 impl Health {
     fn ping_task_svc(&mut self) -> Result<(), anyhow::Error> {
         let req = Request::get(&format!(
-            "{}/healthz",
+            "{}/readyz",
             TASK_SERVICE_URL.ok_or_else(|| anyhow!("missing task service url"))?
         ))
         .body(Nothing)?;
@@ -60,8 +60,8 @@ impl Health {
 
     fn ping_project_svc(&mut self) -> Result<(), anyhow::Error> {
         let req = Request::get(&format!(
-            "{}/healthz",
-            PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("missing task service url"))?
+            "{}/readyz",
+            PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("missing project service url"))?
         ))
         .body(Nothing)?;
 

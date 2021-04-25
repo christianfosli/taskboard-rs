@@ -2,18 +2,27 @@ use warp::{Filter, Rejection, Reply};
 
 use crate::{
     handlers::create_project::handle_create_project,
-    handlers::delete_project::handle_delete_project, handlers::get_project::handle_get_project,
-    handlers::health::handle_health, handlers::increment_counter::handle_increment_counter,
-    handlers::search_project::handle_search_project, services::task_service::with_task_service,
-    services::task_service::ITaskService, store::with_store, store::ProjectStore,
+    handlers::delete_project::handle_delete_project,
+    handlers::get_project::handle_get_project,
+    handlers::health::{handle_liveness, handle_readiness},
+    handlers::increment_counter::handle_increment_counter,
+    handlers::search_project::handle_search_project,
+    services::task_service::with_task_service,
+    services::task_service::ITaskService,
+    store::with_store,
+    store::ProjectStore,
 };
 
 pub fn health_check_route<T: ProjectStore + Clone + Sync + Send>(
     store: &T,
 ) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    warp::path!("healthz")
+    let live = warp::path!("livez").map(handle_liveness);
+
+    let ready = warp::path!("readyz")
         .and(with_store(store.clone()))
-        .and_then(handle_health)
+        .and_then(handle_readiness);
+
+    live.or(ready)
 }
 
 pub fn project_routes<TStore, TTaskService>(

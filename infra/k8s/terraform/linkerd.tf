@@ -1,5 +1,5 @@
 variable "LINKERD_VERSION" {
-  default     = "~>2.10.0"
+  default     = "~>2.10.1"
   description = "The version of Linkerd to install"
 }
 

@@ -24,7 +24,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let project_service_client = ProjectService::new(reqwest::Client::new(), project_service_url);
 
     let routes = routes::task_routes(&es_client, &project_service_client)
-        .or(routes::health_check_route(&es_client))
+        .or(routes::health_routes(&es_client))
         .recover(handle_rejection)
         .with(cors::cors())
         .with(warp::trace::request());

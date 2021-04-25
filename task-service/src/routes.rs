@@ -1,24 +1,31 @@
-use crate::services::project_service::with_project_service;
 use warp::{Filter, Rejection, Reply};
 
 use crate::{
+    handlers::health::{handle_liveness, handle_readiness},
     handlers::task_completed::handle_task_completed,
+    handlers::task_create::handle_task_create,
+    handlers::task_delete::handle_task_delete,
+    handlers::task_list::handle_task_list,
     handlers::task_started::handle_task_started,
-    handlers::{
-        health::handle_health, task_create::handle_task_create, task_delete::handle_task_delete,
-        task_list::handle_task_list, task_update::handle_task_update,
-    },
-    services::project_service::IProjectService,
+    handlers::task_update::handle_task_update,
+    services::project_service::{with_project_service, IProjectService},
     store::with_store,
     store::TaskStore,
 };
 
-pub fn health_check_route<T: TaskStore + Clone + Sync + Send>(
-    store: &T,
-) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
-    warp::path!("healthz")
+pub fn health_routes<TStore>(
+    store: &TStore,
+) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone
+where
+    TStore: TaskStore + Clone + Sync + Send,
+{
+    let liveness = warp::path!("livez").map(handle_liveness);
+
+    let readiness = warp::path!("readyz")
         .and(with_store(store.clone()))
-        .and_then(handle_health)
+        .and_then(handle_readiness);
+
+    liveness.or(readiness)
 }
 
 pub fn task_routes<TStore, TProjectService>(
@@ -135,35 +142,48 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn health_check_given_taskstore_up_should_be_ok() {
+    async fn liveness_should_be_ok() {
         let store = MockTaskStore { success: true };
-        let route = health_check_route(&store);
+        let route = health_routes(&store);
 
         let res = warp::test::request()
             .method("GET")
-            .path("/healthz")
+            .path("/livez")
             .reply(&route)
             .await;
 
         assert!(res.status().is_success());
-        assert_eq!("OK", res.body())
     }
 
     #[tokio::test]
-    async fn health_check_given_taskstore_down_should_be_degraded() {
-        let store = MockTaskStore { success: false };
-        let route = health_check_route(&store);
+    async fn readiness_given_store_up_should_be_ok() {
+        let store = MockTaskStore { success: true };
+        let route = health_routes(&store);
 
         let res = warp::test::request()
             .method("GET")
-            .path("/healthz")
+            .path("/readyz")
             .reply(&route)
             .await;
 
         assert!(res.status().is_success());
 
         let response = String::from_utf8(res.body().to_vec()).unwrap();
-        assert!(response.contains("Degraded"));
+        assert!(response.contains("OK"));
+    }
+
+    #[tokio::test]
+    async fn readiness_given_store_down_should_not_be_ok() {
+        let store = MockTaskStore { success: false };
+        let route = health_routes(&store);
+
+        let res = warp::test::request()
+            .method("GET")
+            .path("/readyz")
+            .reply(&route)
+            .await;
+
+        assert!(!res.status().is_success());
     }
 
     #[tokio::test]

@@ -1,16 +1,18 @@
-use std::convert::Infallible;
-
 use tracing::warn;
-use warp::Reply;
+use warp::{Rejection, Reply};
 
+use crate::errors::PingStoreError;
 use crate::store::TaskStore;
 
-pub async fn handle_health(store: impl TaskStore) -> Result<impl Reply, Infallible> {
-    match store.ping().await {
-        Ok(_) => Ok("OK"),
-        Err(e) => {
-            warn!("TaskStore ping failed: {}", e);
-            Ok("Degraded: Server up, TaskStore unreachable")
-        }
-    }
+pub fn handle_liveness() -> String {
+    "OK".into()
+}
+
+pub async fn handle_readiness(store: impl TaskStore) -> Result<impl Reply, Rejection> {
+    store.ping().await.map_err(|e| {
+        warn!("TaskStore ping failed: {}", e);
+        PingStoreError { inner_error: e }
+    })?;
+
+    Ok("OK. Store OK.")
 }

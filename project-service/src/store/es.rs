@@ -59,7 +59,7 @@ impl ProjectStore for Elasticsearch {
                 let response_body = res.json::<Value>().await?;
                 let project = response_body["hits"]["hits"]
                     .as_array()
-                    .ok_or(anyhow!("res has no hits array"))?
+                    .ok_or_else(|| anyhow!("res has no hits array"))?
                     .first()
                     .and_then(|p| serde_json::from_value::<Project>(p["_source"].clone()).ok());
                 return Ok(project);
@@ -94,8 +94,8 @@ impl ProjectStore for Elasticsearch {
                 let response_body = res.json::<Value>().await?;
                 let matches = response_body["hits"]["hits"]
                     .as_array()
-                    .ok_or(anyhow!("res has no hits array"))?
-                    .into_iter()
+                    .ok_or_else(|| anyhow!("res has no hits array"))?
+                    .iter()
                     .map(|p| {
                         serde_json::from_value::<Project>(p["_source"].clone())
                             .expect("project not mappable")

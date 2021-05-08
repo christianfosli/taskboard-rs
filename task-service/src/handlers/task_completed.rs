@@ -12,7 +12,11 @@ pub async fn handle_task_completed(
     store: impl TaskStore,
     command: CompleteTaskCommand,
 ) -> Result<impl Reply, Rejection> {
-    info!("Task Completed {:?}", command);
+    info!(
+        project = ?command.project_id,
+        task_number = ?command.task_number,
+        "task completed"
+    );
 
     let task = store
         .get(&command.project_id, command.task_number)
@@ -22,7 +26,7 @@ pub async fn handle_task_completed(
                 reason: format!("{}", e),
             })
         })?
-        .ok_or(reject::not_found())?;
+        .ok_or_else(reject::not_found)?;
 
     store
         .persist(

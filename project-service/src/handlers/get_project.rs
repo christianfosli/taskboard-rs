@@ -1,5 +1,5 @@
 use taskboard_core_lib::uuid::Uuid;
-use tracing::error;
+use tracing::{error, info};
 use warp::{
     reject::{self, Reject},
     reply, Rejection, Reply,
@@ -11,8 +11,10 @@ pub async fn handle_get_project(
     store: impl ProjectStore,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
+    info!(project = ?project_id, "getting project");
+
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
-        error!("Failed to parse project id: {:?}", e);
+        error!(error = ?e, "failed to parse project id");
         reject::custom(GetProjectError::Validation(ValidationError {
             reason: format!("Project id {} is not a valid uuid", &project_id),
         }))
@@ -22,11 +24,11 @@ pub async fn handle_get_project(
         .get(&project_id)
         .await
         .map_err(|e| {
-            error!("Failed to get project {} from store: {}", project_id, e);
+            error!(error = ?e, "failed to get project from store");
             reject::custom(GetProjectError::FetchProject)
         })?
-        .and_then(|v| Some(reply::json(&v)))
-        .ok_or(reject::not_found())
+        .map(|project| reply::json(&project))
+        .ok_or_else(reject::not_found)
 }
 
 #[derive(Clone, Debug)]

@@ -83,7 +83,7 @@ impl Project {
     }
 
     fn add_task(&mut self) -> Result<(), JsValue> {
-        let window = web_sys::window().ok_or(JsValue::from_str("No window avilable"))?;
+        let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window avilable"))?;
         let title = window
             .prompt_with_message("Enter task name")?
             .ok_or("No task name specified")?;
@@ -157,10 +157,10 @@ impl Project {
     }
 
     fn delete_project(&mut self) -> Result<(), anyhow::Error> {
-        let window = web_sys::window().ok_or(anyhow!("Window was None"))?;
+        let window = web_sys::window().ok_or_else(|| anyhow!("Window was None"))?;
 
         match window.confirm() {
-            Ok(conf) if conf == true => {
+            Ok(conf) if conf => {
                 log::info!("Deleting project {}", self.title);
                 let req = Request::delete(&format!("{}/{}", PROJECT_SERVICE_URL.unwrap(), self.id))
                     .body(Nothing)?;
@@ -230,7 +230,7 @@ impl Component for Project {
                 self.tasks = Some(
                     self.tasks
                         .clone()
-                        .unwrap_or(Vec::new())
+                        .unwrap_or_default()
                         .into_iter()
                         .map(|t| {
                             if t.number == task.number {
@@ -253,12 +253,12 @@ impl Component for Project {
             Msg::Deleted => {
                 log::info!("Project deleted successfully. Redirecting to home.");
 
-                web_sys::window().map(|win| {
+                if let Some(win) = web_sys::window() {
                     win.location().set_href("/").unwrap_or_else(|e| {
                         self.link
                             .send_message(Msg::SetError(format!("redirect error: {:?}", e)))
                     })
-                });
+                }
             }
             Msg::FetchTasksCompleted(tasks) => {
                 self.title = tasks.project_name;
@@ -296,12 +296,12 @@ impl Component for Project {
             t.sort_unstable_by_key(|t| Reverse(t.number));
 
             // Filter out completed when applicable
-            t.into_iter().filter_map(|t| match self.show_completed {
-                true => Some(t),
-                false => match t.status {
-                    Status::Done => None,
-                    _ => Some(t),
-                },
+            t.into_iter().filter(|t| {
+                if self.show_completed {
+                    true
+                } else {
+                    !matches!(t.status, Status::Done)
+                }
             })
         }) {
             // Convert to HTML

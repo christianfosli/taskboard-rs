@@ -7,6 +7,7 @@ pub use uuid;
 mod task;
 pub use crate::task::*;
 
+/// Commands to serialize and sent to back-end
 pub mod commands;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

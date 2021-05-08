@@ -1,4 +1,4 @@
-#[deny(missing_docs)]
+#![deny(missing_docs)]
 use serde::{Deserialize, Serialize};
 
 /// A task represents a single job.
@@ -30,10 +30,14 @@ pub struct ProjectTasks {
     pub tasks: Vec<Task>,
 }
 
+/// A tasks status
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum Status {
+    /// Not doing
     Todo,
+    /// Currently doing
     Doing,
+    /// Completed
     Done,
 }
 

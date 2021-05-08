@@ -15,15 +15,19 @@ pub async fn handle_task_create(
     project_service: impl IProjectService,
     command: CreateTaskCommand,
 ) -> Result<impl Reply, Rejection> {
+    info!(project = ?command.project_id, "creating new task");
+
     let number = project_service
         .claim_task_number(&command.project_id)
         .await
         .map_err(|e| {
-            error!("Unable to claim task number: {:?}", e);
+            error!(error = ?e, "failed to claim task number");
             reject::custom(PersistError {
                 reason: String::from("Unable to claim task number"),
             })
         })?;
+
+    info!(number, "claimed task number");
 
     let task = Task {
         number,
@@ -36,12 +40,12 @@ pub async fn handle_task_create(
         .persist(&command.project_id, &task)
         .await
         .map_err(|e| {
-            error!("Unable to persist task {:?}: {:?}", task, e);
+            error!(error = ?e, "failed to persist");
             reject::custom(PersistError {
                 reason: String::from("Unable to persist to store"),
             })
         })?;
 
-    info!("Task {} created successfully", number);
+    info!("task created");
     Ok(with_status(reply::json(&task), StatusCode::CREATED))
 }

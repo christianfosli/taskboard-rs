@@ -43,9 +43,9 @@ pub async fn handle_rejection(err: warp::Rejection) -> Result<impl Reply, Infall
 
     let status_code = if err.is_not_found() {
         StatusCode::NOT_FOUND
-    } else if let Some(_) = err.find::<BodyDeserializeError>() {
+    } else if err.find::<BodyDeserializeError>().is_some() {
         StatusCode::BAD_REQUEST
-    } else if let Some(_) = err.find::<ValidationError>() {
+    } else if err.find::<ValidationError>().is_some() {
         StatusCode::UNPROCESSABLE_ENTITY
     } else {
         StatusCode::INTERNAL_SERVER_ERROR

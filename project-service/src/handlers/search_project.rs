@@ -1,5 +1,5 @@
 use percent_encoding::percent_decode_str;
-use tracing::{debug, error};
+use tracing::{error, info};
 use warp::{
     reject::{self, Reject},
     reply, Rejection, Reply,
@@ -21,12 +21,12 @@ pub async fn handle_search_project(
         })?
         .to_string();
 
-    debug!("Search text decoded to {}", &search_text);
+    info!(?search_text);
 
     let projects = store.search(&search_text).await.map_err(|e| {
         error!(
-            "Failed to get search results for {} from store: {}",
-            search_text, e
+            error = ?e,
+            "failed to get search results for from store",
         );
         reject::custom(SearchProjectError {})
     })?;

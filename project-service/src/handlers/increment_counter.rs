@@ -1,5 +1,5 @@
 use taskboard_core_lib::{uuid::Uuid, Project};
-use tracing::error;
+use tracing::{error, info};
 use warp::{
     reject::{self, Reject},
     reply, Rejection, Reply,
@@ -11,8 +11,10 @@ pub async fn handle_increment_counter(
     store: impl ProjectStore,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
+    info!(project = ?project_id, "incrementing counter");
+
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
-        error!("Failed to parse project id: {:?}", e);
+        error!(error = ?e, "failed to parse project id");
         reject::custom(IncrementCounterError::Validation(ValidationError {
             reason: format!("Project id {} is not a valid uuid", &project_id),
         }))
@@ -22,10 +24,10 @@ pub async fn handle_increment_counter(
         .get(&project_id)
         .await
         .map_err(|e| {
-            error!("Failed to get project {} from store: {}", project_id, e);
+            error!(error = ?e, "failed to get project from store");
             reject::custom(IncrementCounterError::GetProject)
         })?
-        .ok_or(reject::not_found())?;
+        .ok_or_else(reject::not_found)?;
 
     let project = Project {
         task_conter: project.task_conter + 1,
@@ -33,7 +35,7 @@ pub async fn handle_increment_counter(
     };
 
     store.persist(&project).await.map_err(|e| {
-        error!("Failed to persist project: {}", e);
+        error!(error = ?e, "failed to persist");
         reject::custom(IncrementCounterError::SaveChanges)
     })?;
 

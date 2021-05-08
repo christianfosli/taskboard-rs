@@ -68,7 +68,9 @@ impl Component for TaskBox {
 
                 let new_rem = window
                     .prompt_with_message("Enter remaining work")
-                    .and_then(|rem: Option<String>| rem.ok_or(JsValue::from("No value provided")))
+                    .and_then(|rem: Option<String>| {
+                        rem.ok_or_else(|| JsValue::from("No value provided"))
+                    })
                     .and_then(|rem: String| {
                         rem.parse::<u8>()
                             .map_err(|err| JsValue::from(err.to_string()))

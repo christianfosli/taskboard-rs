@@ -10,21 +10,21 @@ pub async fn handle_task_delete(
     store: impl TaskStore,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
+    info!(project = ?project_id, "deleting tasks for project");
+
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
-        error!("Unable to parse project id: {:?}", e);
+        error!(error=?e, "failed to parse project id");
         reject::custom(ValidationError {
             reason: format!("Invalid project id: {}", e),
         })
     })?;
 
     store.delete(&project_id).await.map_err(|e| {
-        error!("Unable to delete tasks: {:?}", e);
+        error!(error=?e, "failed to delete tasks");
         reject::custom(DeleteError {
             reason: String::from("Unable to delete tasks from store"),
         })
     })?;
-
-    info!("Tasks deleted successfully");
 
     Ok(StatusCode::OK)
 }

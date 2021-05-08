@@ -10,7 +10,7 @@ pub fn handle_liveness() -> String {
 
 pub async fn handle_readiness(store: impl TaskStore) -> Result<impl Reply, Rejection> {
     store.ping().await.map_err(|e| {
-        warn!("TaskStore ping failed: {}", e);
+        warn!(error=?e, "TaskStore ping failed");
         PingStoreError { inner_error: e }
     })?;
 

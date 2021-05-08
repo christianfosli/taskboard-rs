@@ -8,7 +8,11 @@ pub async fn handle_task_update(
     store: impl TaskStore,
     command: UpdateTaskCommand,
 ) -> Result<impl Reply, Rejection> {
-    info!("Update task: {:?}", command);
+    info!(
+        project = ?command.project_id,
+        task_number = ?command.updated_task.number,
+        "updating task"
+    );
 
     store
         .persist(&command.project_id, &command.updated_task)

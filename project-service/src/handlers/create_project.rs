@@ -1,5 +1,5 @@
 use taskboard_core_lib::{commands::CreateProjectCommand, Project};
-use tracing::error;
+use tracing::{error, info};
 use warp::{
     hyper::StatusCode,
     reject::{self, Reject},
@@ -13,10 +13,12 @@ pub async fn handle_create_project(
     store: impl ProjectStore,
     command: CreateProjectCommand,
 ) -> Result<impl Reply, Rejection> {
+    info!(name = ?command.name, "creating new project");
+
     let project = Project::new(&command.name);
 
     store.persist(&project).await.map_err(|e| {
-        error!("Failed to persist project: {}", e);
+        error!(error = ?e, "failed to persist");
         reject::custom(PersistProjectError {})
     })?;
 

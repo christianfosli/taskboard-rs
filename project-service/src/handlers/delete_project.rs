@@ -15,24 +15,27 @@ pub async fn handle_delete_project(
     task_service: impl ITaskService,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
+    info!(project = ?project_id, "deleting project");
+
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
-        error!("Failed to parse project id: {:?}", e);
+        error!(error = ?e, "failed to parse project id");
         reject::custom(DeleteProjectError::Validation(ValidationError {
             reason: format!("Project id {} is not a valid uuid", &project_id),
         }))
     })?;
 
     task_service.delete_tasks(&project_id).await.map_err(|e| {
-        error!("Failed to delete tasks for project: {:?}", e);
+        error!(error = ?e, "failed to delete project's tasks");
         reject::custom(DeleteProjectError::RemoveRelatedTasks)
     })?;
-    info!("Related tasks deleted successfully");
+
+    info!("related tasks deleted");
 
     store.delete(&project_id).await.map_err(|e| {
-        error!("Failed to delete project id from store: {:?}", e);
+        error!(error = ?e, "failed to delete project itself");
         reject::custom(DeleteProjectError::RemoveFromStore)
     })?;
-    info!("Project deleted successfully");
+    info!("project itself deleted");
 
     Ok(StatusCode::OK)
 }

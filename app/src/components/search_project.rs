@@ -32,7 +32,7 @@ impl SearchProject {
     fn do_search(&mut self) -> Result<(), anyhow::Error> {
         let search_url = Url::parse(&format!(
             "{}/search/",
-            PROJECT_SERVICE_URL.ok_or(anyhow!("PROJECT_SERVICE_URL not set"))?
+            PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL not set"))?
         ))?
         .join(&self.search_query)?;
 
@@ -113,7 +113,7 @@ impl Component for SearchProject {
 
         let matches = match self.matches.clone() {
             None => html! {},
-            Some(m) if m.len() == 0 => html! {<p>{ "No matches" }</p>},
+            Some(m) if m.is_empty() => html! {<p>{ "No matches" }</p>},
             Some(m) => {
                 let matches = m.iter().map(|p| to_li(p)).collect::<Html>();
 

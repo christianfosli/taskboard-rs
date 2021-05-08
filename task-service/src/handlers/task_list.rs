@@ -13,7 +13,7 @@ pub async fn handle_task_list(
     project_service: impl IProjectService,
     project_id: String,
 ) -> Result<impl Reply, Rejection> {
-    info!("Finding tasks associated to project {}", project_id);
+    info!(project = ?project_id, "finding tasks for project");
 
     let project_id = Uuid::parse_str(&project_id).map_err(|e| {
         reject::custom(ValidationError {
@@ -26,12 +26,12 @@ pub async fn handle_task_list(
         .await
         .map(|proj| proj.name)
         .unwrap_or_else(|e| {
-            warn!("Unable to get project name due to {:?}", e);
+            warn!(error = ?e, "unable to get project name");
             "Unknown (try again later)".to_owned()
         });
 
     let tasks = store.fetch_tasks(&project_id).await.map_err(|e| {
-        error!("Unable to fetch tasks for project {}: {:?}", project_id, e);
+        error!(error = ?e, "failed to fetch tasks");
         reject::custom(FetchError {
             reason: format!("{}", e),
         })

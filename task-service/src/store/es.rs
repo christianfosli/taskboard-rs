@@ -54,9 +54,9 @@ impl TaskStore for Elasticsearch {
                 let response_body = res.json::<Value>().await?;
                 let hits = response_body["hits"]["hits"]
                     .as_array()
-                    .ok_or(anyhow!("res has no hits array"))?;
+                    .ok_or_else(|| anyhow!("res has no hits array"))?;
                 let tasks = hits
-                    .into_iter()
+                    .iter()
                     .map(|t| {
                         serde_json::from_value::<Task>(t["_source"].clone())
                             .expect("task not mappable")
@@ -92,7 +92,7 @@ impl TaskStore for Elasticsearch {
                 let response_body = res.json::<Value>().await?;
                 let task = response_body["hits"]["hits"]
                     .as_array()
-                    .ok_or(anyhow!("res has no hits array"))?
+                    .ok_or_else(|| anyhow!("res has no hits array"))?
                     .first()
                     .and_then(|t| serde_json::from_value::<Task>(t["_source"].clone()).ok());
 

@@ -65,8 +65,9 @@ impl Component for Model {
             </main>
             <footer>
                 <p>
-                { "Written in Rust by Christian Fosli | Source code on " }
+                { "Source code on " }
                 <a href="https://github.com/christianfosli/taskboard-rs">{ "GitHub" }</a>
+                { " | MIT License" }
                 </p>
             </footer>
             </>

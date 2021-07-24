@@ -139,7 +139,7 @@ impl Component for SearchProject {
             <h3>{ "Search for an existing project" }</h3>
             <form onsubmit={handle_submit}>
                 <label for="search-project-field">{ "Project name" }</label>
-                <input type="text" id="search-project-field" name="query" value={&self.search_query} oninput={handle_input} required={true}/>
+                <input type="text" id="search-project-field" name="query" value={self.search_query.clone()} oninput={handle_input} required={true}/>
                 <input type="submit" value="Search"/>
             </form>
             {error}

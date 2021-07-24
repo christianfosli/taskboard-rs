@@ -119,7 +119,7 @@ impl Component for CreateProject {
             <h3>{ "Create a new project" }</h3>
             <form onsubmit={handle_submit}>
                 <label for="create-project-name-field">{ "Project name" }</label>
-                <input required={true} type="text" id="create-project-name-field" name="name" value={&self.name} oninput={handle_input} />
+                <input required={true} type="text" id="create-project-name-field" name="name" value={self.name.clone()} oninput={handle_input} />
                 <input type="submit" />
             </form>
             {error}

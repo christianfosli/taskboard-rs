@@ -1,4 +1,4 @@
-FROM rust:1.52 AS builder
+FROM rust:1.53 AS builder
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 WORKDIR /usr/src/app
 ARG VERSION=latest

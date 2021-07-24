@@ -285,9 +285,9 @@ impl Component for Project {
     }
 
     fn view(&self) -> Html {
-        let to_taskbox = |model: &Task| {
+        let to_taskbox = |model: Task| {
             html! {
-                <TaskBox onchange=self.link.callback(|x| Msg::Update(x)) data=model />
+                <TaskBox onchange=self.link.callback(Msg::Update) data=model />
             }
         };
 
@@ -307,7 +307,7 @@ impl Component for Project {
             // Convert to HTML
             Some(tasks) => html! {
                 <ul>
-                {tasks.map(|t| to_taskbox(&t)).collect::<Html>()}
+                {tasks.map(to_taskbox).collect::<Html>()}
                 </ul>
             },
             None if self.fetch_status == FetchStatus::Loading => html! {

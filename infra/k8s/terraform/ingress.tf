@@ -9,7 +9,7 @@ resource "helm_release" "ingressNginx" {
   namespace   = kubernetes_namespace.ingressNamespace.metadata.0.name
   repository  = "https://kubernetes.github.io/ingress-nginx"
   chart       = "ingress-nginx"
-  version     = "~>3.30"
+  version     = "4"
   max_history = 5
 
   set {

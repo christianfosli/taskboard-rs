@@ -34,6 +34,12 @@ button {
   background-color: lightsalmon;
 }
 
+.box-wip {
+  background-color: orange;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
 ul {
   list-style-type: none;
   padding: 1rem;

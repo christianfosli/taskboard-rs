@@ -6,6 +6,7 @@ use crate::components::{create_project::CreateProject, search_project::SearchPro
 pub struct Home {
     _link: ComponentLink<Self>,
     description: String,
+    heads_up: String,
 }
 
 pub enum Msg {}
@@ -25,9 +26,16 @@ impl Component for Home {
                 String::default()
             });
 
+        let heads_up = "🚧 This is mostly a proof-of-concept to play with some fun technology.
+            Feel free to add your own projects/tasks,
+            but be aware that they will be publically accessible and may be edited
+            or removed by others 🚧"
+            .to_string();
+
         Self {
             _link: link,
             description,
+            heads_up,
         }
     }
 
@@ -43,6 +51,7 @@ impl Component for Home {
         html! {
             <>
             <p>{ &self.description }</p>
+            <p class="box-wip">{ &self.heads_up }</p>
             < SearchProject />
             < CreateProject />
             </>

@@ -4,6 +4,8 @@ use yew_router::{route::Route, router::Router, Switch};
 
 use crate::components::{health::Health, home::Home, project::Project};
 
+const BUILD_VERSION: Option<&'static str> = option_env!("BUILD_VERSION");
+
 #[derive(Switch, Debug, Clone)]
 pub enum AppRoute {
     #[to = "/{projectid}"]
@@ -67,6 +69,7 @@ impl Component for Model {
                 <p>
                 { "Source code on " }
                 <a href="https://github.com/christianfosli/taskboard-rs">{ "GitHub" }</a>
+                { format!(" | Version {}", BUILD_VERSION.unwrap_or("???")) }
                 { " | MIT License" }
                 </p>
             </footer>

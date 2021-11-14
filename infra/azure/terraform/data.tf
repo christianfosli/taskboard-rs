@@ -3,12 +3,13 @@ variable "RESOURCE_GROUP" {
 }
 
 variable "K8S_VERSION" {
-  default = "1.20.5"
+  default = "1.21.2"
 }
 
 variable "AKS_NODE_POOL" {
   default = {
-    node_count      = 1
+    min_count       = 1
+    max_count       = 2
     vm_size         = "Standard_B2s"
     os_disk_size_gb = 32
     max_pods        = 50

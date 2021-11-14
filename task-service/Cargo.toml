@@ -2,7 +2,7 @@
 name = "task-service"
 version = "0.1.0"
 authors = ["Christian Fosli <cfosli@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 taskboard-core-lib = "0.1"
@@ -10,7 +10,7 @@ tokio = { version = "1", features = ["full"] }
 warp = "0.3"
 elasticsearch = "7.12.1-alpha.1"
 tracing = "0.1"
-tracing-subscriber = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"]}
 anyhow = "1"
 async-trait = "0.1"
 serde = "1"

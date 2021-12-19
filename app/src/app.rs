@@ -1,79 +1,57 @@
 use taskboard_core_lib::uuid::Uuid;
-use yew::{html, Component, ComponentLink};
-use yew_router::{route::Route, router::Router, Switch};
+use yew::prelude::*;
+use yew_router::prelude::*;
 
 use crate::components::{health::Health, home::Home, project::Project};
 
 const BUILD_VERSION: Option<&'static str> = option_env!("BUILD_VERSION");
 
-#[derive(Switch, Debug, Clone)]
+#[derive(Debug, Clone, Routable, PartialEq)]
 pub enum AppRoute {
-    #[to = "/{projectid}"]
-    Project(Uuid),
-    #[to = "/healthz"]
+    #[at("/")]
+    Home,
+    #[at("/project/:id")]
+    Project { id: Uuid },
+    #[at("/healthz")]
     Health,
-    #[to = "/404"]
+    #[not_found]
+    #[at("/404")]
     NotFound,
-    #[to = "/!"]
-    Index,
 }
 
-pub struct Model {}
-
-pub enum Msg {}
-
-impl Component for Model {
-    type Message = Msg;
-
-    type Properties = ();
-
-    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Self {}
+fn switch(route: &AppRoute) -> Html {
+    match route {
+        AppRoute::Project { id } => html! {< Project id={id.clone()} />},
+        AppRoute::Health => html! {< Health /> },
+        AppRoute::NotFound => html! { <h3> { "Page Not Found" } </h3> },
+        AppRoute::Home => html! {< Home />},
     }
+}
 
-    fn update(&mut self, _msg: Self::Message) -> yew::ShouldRender {
-        false
-    }
-
-    fn change(&mut self, _props: Self::Properties) -> yew::ShouldRender {
-        false
-    }
-
-    fn view(&self) -> yew::Html {
-        html! {
-            <>
-            <header>
-                <h1>{ "Taskboard.cloud" }</h1>
-                <nav>
-                    <a href="/">{ "🏠 Home" }</a>
-                    <a href="/healthz"> { "💓 Health" }</a>
-                </nav>
-            </header>
-            <main>
-            <Router<AppRoute>
-                render = Router::render(|switch: AppRoute| {
-                    match switch {
-                        AppRoute::Project(projectid) => html! {< Project id=projectid />},
-                        AppRoute::Health => html! {< Health /> },
-                        AppRoute::NotFound => html! { <h3> { "Page Not Found" } </h3> },
-                        AppRoute::Index => html! {< Home />},
-                    }
-                })
-                redirect = Router::redirect(|route: Route| {
-                    log::warn!("Page {:?} does not exist... Redirecting to {:?}", route.route, AppRoute::NotFound);
-                    AppRoute::NotFound
-                })
-            />
-            </main>
-            <footer>
-                <p>
-                { "Source code on " }
-                <a href="https://github.com/christianfosli/taskboard-rs">{ "GitHub" }</a>
-                { format!(" | Version {}", BUILD_VERSION.unwrap_or("???")) }
-                { " | MIT License" }
-                </p>
-            </footer>
-            </>
-        }
+#[function_component(App)]
+pub fn app() -> Html {
+    html! {
+        <>
+        <header>
+            <h1>{ "Taskboard.cloud" }</h1>
+            <nav>
+                <Link<AppRoute> to={AppRoute::Home}>{ "🏠 Home" }</Link<AppRoute>>
+                <Link<AppRoute> to={AppRoute::Health}> { "💓 Health" }</Link<AppRoute>>
+            </nav>
+        </header>
+        <main>
+        <BrowserRouter>
+            <Switch<AppRoute> render={Switch::render(switch)} />
+        </BrowserRouter>
+        </main>
+        <footer>
+            <p>
+            { "Source code on " }
+            <a href="https://github.com/christianfosli/taskboard-rs">{ "GitHub" }</a>
+            { format!(" | Version {}", BUILD_VERSION.unwrap_or("???")) }
+            { " | MIT License" }
+            </p>
+        </footer>
+        </>
     }
 }

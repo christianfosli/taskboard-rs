@@ -5,16 +5,18 @@ const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_U
 
 #[function_component(CreateProject)]
 pub fn create_project() -> Html {
-    let name = use_state(|| "");
+    let name = use_state(|| String::from(""));
 
-    let handle_input = Callback::from(|e: InputEvent| name.set(&e.data().unwrap()));
+    let n2 = name.clone();
+    let handle_input = Callback::from(move |e: InputEvent| (n2.set(e.data().unwrap())));
+
     let handle_submit = Callback::from(|e: FocusEvent| {
         e.prevent_default();
         todo!("Create the project...");
     });
 
     let error: UseStateHandle<Option<String>> = use_state(|| None);
-    let error_html = match *error {
+    let error_html = match &*error {
         Some(e) => html! {
             <div class="error">
             { e }
@@ -24,19 +26,21 @@ pub fn create_project() -> Html {
     };
 
     let created: UseStateHandle<Option<Project>> = use_state(|| None);
-    let created_html = match *created {
+    let created_html = match &*created {
         Some(p) => html! {
             <a href={format!("/{}", p.id)}>{ &format!("Project {} created successfully", p.name) }</a>
         },
         None => html! {},
     };
 
+    let name = String::from(name.as_str());
+
     html! {
         <>
         <h3>{ "Create a new project" }</h3>
         <form onsubmit={handle_submit}>
             <label for="create-project-name-field">{ "Project name" }</label>
-            <input required={true} type="text" id="create-project-name-field" name="name" value={*name} oninput={handle_input} />
+            <input required={true} type="text" id="create-project-name-field" name="name" value={name} oninput={handle_input} />
             <input type="submit" />
         </form>
         {error_html}

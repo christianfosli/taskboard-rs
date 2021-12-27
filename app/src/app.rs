@@ -31,7 +31,7 @@ fn switch(route: &AppRoute) -> Html {
 #[function_component(App)]
 pub fn app() -> Html {
     html! {
-        <>
+        <BrowserRouter>
         <header>
             <h1>{ "Taskboard.cloud" }</h1>
             <nav>
@@ -40,9 +40,7 @@ pub fn app() -> Html {
             </nav>
         </header>
         <main>
-        <BrowserRouter>
             <Switch<AppRoute> render={Switch::render(switch)} />
-        </BrowserRouter>
         </main>
         <footer>
             <p>
@@ -52,6 +50,6 @@ pub fn app() -> Html {
             { " | MIT License" }
             </p>
         </footer>
-        </>
+        </BrowserRouter>
     }
 }

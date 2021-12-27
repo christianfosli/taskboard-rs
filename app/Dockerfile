@@ -13,9 +13,10 @@ RUN sed -i 's/$VERSION/'"$VERSION"'/g' ./static/index.html \
     && mv ./static/style.css ./static/style-${VERSION}.css
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/src/app/target \
-    wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm-${VERSION} --out-dir ./static
+    wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm-${VERSION} --out-dir ./out
 
 FROM nginx AS final
 COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /usr/src/app/static /usr/share/nginx/html
+COPY --from=builder /usr/src/app/out /usr/share/nginx/html
 EXPOSE 80

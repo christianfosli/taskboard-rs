@@ -56,7 +56,7 @@ pub fn search_project() -> Html {
         }
     };
 
-    let matches_html = match *matches.clone() {
+    let matches_html = match &*matches.clone() {
         None => html! {},
         Some(m) if m.is_empty() => html! {<p>{ "No matches" }</p>},
         Some(m) => {
@@ -70,7 +70,7 @@ pub fn search_project() -> Html {
         }
     };
 
-    let error = match *error {
+    let error = match &*error {
         Some(e) => html! {
             <div class="error">
             { e }

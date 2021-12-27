@@ -852,6 +852,8 @@ name = "taskboard-app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "gloo-dialogs",
+ "gloo-utils",
  "log",
  "reqwest",
  "taskboard-core-lib",

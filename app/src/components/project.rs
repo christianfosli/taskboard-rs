@@ -177,27 +177,16 @@ fn delete_project() -> Result<(), anyhow::Error> {
 
 #[function_component(Project)]
 pub fn project(props: &ProjectProps) -> Html {
-    let title = use_state(|| props.id.into());
+    let title = use_state(|| props.id.to_string());
     let tasks: UseStateHandle<Option<Vec<Task>>> = use_state(|| None);
-
     let show_completed = use_state(|| false);
-    let toggle_show_completed = Callback::from(|_| {
-        show_completed.set(!*show_completed);
-    });
-
     let error: UseStateHandle<Option<String>> = use_state(|| None);
-
-    use_effect(move || {
-        // TODO: fetch tasks, fetch title
-        tasks.set(Some(vec![Task::new(1, "mocktask")]));
-        || {}
-    });
 
     let handle_task_create = Callback::from(|_| {
         log::warn!("Should create a new task");
     });
 
-    let handle_task_update = Callback::from(|t: Task| {
+    let handle_task_update = Callback::from(|_t: Task| {
         log::warn!("Should update the task but don't know how to yet");
     });
 
@@ -207,12 +196,13 @@ pub fn project(props: &ProjectProps) -> Html {
 
     let to_taskbox = |model: Task| {
         html! {
-            <TaskBox onchange={handle_task_update} data={model} />
+            <TaskBox onchange={&handle_task_update} data={model.clone()} />
         }
     };
 
-    let task_list = match tasks.map(|mut t| {
+    let task_list = match tasks.as_ref().map(|t| {
         // Display new tasks first
+        let mut t = t.to_vec();
         t.sort_unstable_by_key(|t| Reverse(t.number));
 
         // Filter out completed when applicable
@@ -235,10 +225,16 @@ pub fn project(props: &ProjectProps) -> Html {
         },
     };
 
-    let error_box = match *error {
+    let error_box = match &*error {
         Some(e) => html! { <div class="error"> { e } </div> },
         None => html! { <> </> },
     };
+
+    use_effect(move || {
+        // TODO: fetch tasks, fetch title
+        tasks.set(Some(vec![Task::new(1, "mocktask")]));
+        || {}
+    });
 
     html! {
         <>
@@ -252,7 +248,7 @@ pub fn project(props: &ProjectProps) -> Html {
                 id="show-completed"
                 name="show completed tasks"
                 checked={*show_completed}
-                onchange={toggle_show_completed}
+                onchange={move |_| show_completed.set(*show_completed)}
             />
         </div>
         {task_list}

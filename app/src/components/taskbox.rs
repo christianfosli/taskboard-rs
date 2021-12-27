@@ -1,5 +1,5 @@
+use gloo_dialogs::prompt;
 use taskboard_core_lib::{Status, Task};
-use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
 //pub struct TaskBox {
@@ -21,97 +21,90 @@ pub struct TaskBoxProps {
 
 #[function_component(TaskBox)]
 pub fn taskbox(props: &TaskBoxProps) -> Html {
-    let rem_work = match props.data.remaining_work {
+    let rem_work = match &props.data.remaining_work {
         Some(hours) => format!("rem: {} hrs", hours),
         None => String::from("rem: ?"),
     };
 
-    let error = use_state(|| None);
+    let onchange = props.onchange.clone();
+    let data = props.data.clone();
 
-    let window = web_sys::window().expect("No window available");
-
-    let handle_status_change = |status: Status| {
+    let handle_status_change = move |status: Status| {
         let remaining_work = match status {
             Status::Done => Some(0),
-            Status::Doing if props.data.status == Status::Done => None,
-            _ => props.data.remaining_work,
+            Status::Doing if data.status == Status::Done => None,
+            _ => data.remaining_work,
         };
 
-        props.onchange.emit(Task {
+        onchange.emit(Task {
             status,
             remaining_work,
-            ..props.data.clone()
+            ..data
         })
     };
 
-    let handle_title_change = |_| {
-        let title = window.prompt_with_message("Enter task name").ok().flatten();
+    let onchange = props.onchange.clone();
+    let data = props.data.clone();
+
+    let handle_title_change = move |_| {
+        let title = prompt("Enter task name", None);
         match title {
-            Some(title) => props.onchange.emit(Task {
-                title,
-                ..props.data.clone()
+            Some(title) => onchange.emit(Task {
+                title: title.to_string(),
+                ..data
             }),
             None => log::warn!(
                 "Not changing title for task {}. Operation failed or was cancelled.",
-                props.data.number
+                data.number
             ),
         }
     };
 
-    let handle_rem_change = |_| {
-        let new_rem = window
-            .prompt_with_message("Enter remaining work")
-            .and_then(|rem: Option<String>| rem.ok_or_else(|| JsValue::from("No value provided")))
-            .and_then(|rem: String| {
-                rem.parse::<u8>()
-                    .map_err(|err| JsValue::from(err.to_string()))
-            });
+    let onchange = props.onchange.clone();
+    let data = props.data.clone();
 
-        match new_rem {
-            Ok(rem) => props.onchange.emit(Task {
-                remaining_work: Some(rem),
-                ..props.data.clone()
-            }),
-            Err(e) => *error = e.as_string(),
+    let handle_rem_change = move |_| {
+        if let Some(rem) = prompt("Enter remaining work", None) {
+            let rem = rem.parse::<u8>();
+            match rem {
+                Ok(rem) => onchange.emit(Task {
+                    remaining_work: Some(rem),
+                    ..data.clone()
+                }),
+                Err(e) => log::error!("Error changing rem: {}", e),
+            }
         }
     };
 
-    let action = match props.data.status {
-        Status::Todo => html! {
-            <button onclick={|_| {handle_status_change(Status::Doing)}}>{ "Do -->" }</button>
-        },
-        Status::Doing => html! {
-            <>
-            <button onclick={|_| {handle_status_change(Status::Todo)}}>{ "<-- Not doing" }</button>
-            <button onclick={|_| {handle_status_change(Status::Done)}}>{ "Done -->" }</button>
-            </>
-        },
-        Status::Done => html! {
-            <button onclick={|_| {handle_status_change(Status::Doing)}}>{ "<-- Not done" }</button>
-        },
-    };
-
-    let data = props.data;
+    let action = html! { <button>{ "TODO: Implement buttons" }</button> };
+    // let action = match data.status {
+    //     Status::Todo => html! {
+    //         <button onclick={move |_| handle_status_change(Status::Doing)}>{ "Do -->" }</button>
+    //     },
+    //     Status::Doing => html! {
+    //         <>
+    //         <button onclick={move |_| {handle_status_change(Status::Todo)}}>{ "<-- Not doing" }</button>
+    //         <button onclick={move |_| {handle_status_change(Status::Done)}}>{ "Done -->" }</button>
+    //         </>
+    //     },
+    //     Status::Done => html! {
+    //         <button onclick={move |_| {handle_status_change(Status::Doing)}}>{ "<-- Not done" }</button>
+    //     },
+    // };
 
     html! {
 
-        <li class={format!("taskbox {:?}", data.status)}>
-            <h3>{ data.title } </h3>
-            <p class="status">{ format!("status: {:?}", data.status) }</p>
+        <li class={format!("taskbox {:?}", props.data.status.clone())}>
+            <h3>{ &props.data.title } </h3>
+            <p class="status">{ format!("status: {:?}", props.data.status.clone()) }</p>
             <p>{rem_work}  </p>
             <div>
                 <button onclick={handle_title_change}>{ "Edit title" }</button>
-                <button disabled={data.status==Status::Done} onclick={handle_rem_change}>{ "Update rem" }</button>
+                <button disabled={props.data.status.clone()==Status::Done} onclick={handle_rem_change}>{ "Update rem" }</button>
             </div>
             <div>
                 {action}
             </div>
-            <p class="error">{
-                match *error {
-                    Some(e) => &e,
-                    None => ""
-                }
-            }</p>
         </li>
     }
 }

@@ -1,110 +1,77 @@
-use taskboard_core_lib::Project;
+use taskboard_core_lib::{commands::CreateProjectCommand, Project};
+use wasm_bindgen_futures::spawn_local;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
+use yew_router::prelude::*;
+
+use crate::app::AppRoute;
 
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
 #[function_component(CreateProject)]
 pub fn create_project() -> Html {
     let name = use_state(|| String::from(""));
+    let created: UseStateHandle<Option<Project>> = use_state(|| None);
 
-    let n2 = name.clone();
-    let handle_input = Callback::from(move |e: InputEvent| (n2.set(e.data().unwrap())));
-
-    let handle_submit = Callback::from(|e: FocusEvent| {
-        e.prevent_default();
-        todo!("Create the project...");
-    });
-
-    let error: UseStateHandle<Option<String>> = use_state(|| None);
-    let error_html = match &*error {
-        Some(e) => html! {
-            <div class="error">
-            { e }
-            </div>
-        },
-        None => html! {},
+    let handle_input = {
+        let name = name.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            name.set(input.value());
+        })
     };
 
-    let created: UseStateHandle<Option<Project>> = use_state(|| None);
+    let handle_submit = {
+        let name = name.clone();
+        let created = created.clone();
+        Callback::from(move |e: FocusEvent| {
+            e.prevent_default();
+            let name = name.clone();
+            let created = created.clone();
+            spawn_local(async move {
+                let res = create_the_project(name.as_ref()).await;
+                match res {
+                    Ok(res) => created.set(Some(res)),
+                    Err(e) => {
+                        log::error!("{:?}", e);
+                        created.set(None);
+                    }
+                }
+            })
+        })
+    };
+
     let created_html = match &*created {
         Some(p) => html! {
-            <a href={format!("/{}", p.id)}>{ &format!("Project {} created successfully", p.name) }</a>
+            <Link<AppRoute> to={AppRoute::Project { id: p.id }}>{ &format!("Project {} created successfully", p.name) }</Link<AppRoute>>
         },
         None => html! {},
     };
-
-    let name = String::from(name.as_str());
 
     html! {
         <>
         <h3>{ "Create a new project" }</h3>
         <form onsubmit={handle_submit}>
             <label for="create-project-name-field">{ "Project name" }</label>
-            <input required={true} type="text" id="create-project-name-field" name="name" value={name} oninput={handle_input} />
+            <input required={true} type="text" id="create-project-name-field" name="name" value={(*name).clone()} onchange={handle_input} />
             <input type="submit" />
         </form>
-        {error_html}
         {created_html}
         </>
     }
 }
 
-//pub struct CreateProject {
-//    link: ComponentLink<Self>,
-//    name: String,
-//    ft: Option<FetchTask>,
-//    created: Option<Project>,
-//    error: Option<String>,
-//}
+async fn create_the_project(name: &str) -> Result<Project, anyhow::Error> {
+    let client = reqwest::Client::new();
+    let command = CreateProjectCommand { name: name.into() };
 
-//pub enum Msg {
-//    SetName(String),
-//    Create,
-//    SetCreated(Project),
-//    SetError(String),
-//}
+    let created = client
+        .post(PROJECT_SERVICE_URL.unwrap())
+        .json(&command)
+        .send()
+        .await?
+        .json()
+        .await?;
 
-//    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-//        match msg {
-//            Msg::SetName(name) => {
-//                self.name = name;
-//            }
-//            Msg::Create => {
-//                let command = CreateProjectCommand {
-//                    name: self.name.clone(),
-//                };
-//
-//                Request::post(PROJECT_SERVICE_URL.unwrap())
-//                    .header("Content-Type", "application/json")
-//                    .body(Json(&command))
-//                    .map(|req| {
-//                        let callback = self.link.callback(
-//                            |res: Response<Json<Result<Project, anyhow::Error>>>| {
-//                                if let (meta, Json(Ok(body))) = res.into_parts() {
-//                                    if meta.status.is_success() {
-//                                        return Msg::SetCreated(body);
-//                                    }
-//                                }
-//                                Msg::SetError(String::from("An error occured"))
-//                            },
-//                        );
-//
-//                        self.ft = FetchService::fetch(req, callback).ok();
-//                    })
-//                    .unwrap_or_else(|err| {
-//                        self.link.send_message(Msg::SetError(err.to_string()));
-//                    });
-//
-//                return false;
-//            }
-//            Msg::SetCreated(project) => {
-//                self.created = Some(project);
-//                self.error = None;
-//            }
-//            Msg::SetError(message) => {
-//                log::error!("Create project failed: {}", &message);
-//                self.error = Some(message);
-//            }
-//        }
-//        true
-//    }
+    Ok(created)
+}

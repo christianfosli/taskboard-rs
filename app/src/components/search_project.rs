@@ -1,58 +1,53 @@
+use wasm_bindgen_futures::spawn_local;
+
+use anyhow::anyhow;
+use reqwest::Url;
 use taskboard_core_lib::Project;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
+use yew_router::prelude::*;
+
+use crate::app::AppRoute;
 
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
-//pub enum Msg {
-//    SetSearch(String),
-//    PerformSearch,
-//    SearchCompleted(Vec<Project>),
-//    SearchFailed(String),
-//}
-
-fn do_search() -> Result<(), anyhow::Error> {
-    // TODO: Use reqwest
-    // let search_url = Url::parse(&format!(
-    //     "{}/search/",
-    //     PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL not set"))?
-    // ))?
-    // .join(&self.search_query)?;
-
-    // Request::get(search_url.as_str()).body(Nothing).map(|req| {
-    //     let callback =
-    //         self.link
-    //             .callback(|res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
-    //                 if let (meta, Json(Ok(body))) = res.into_parts() {
-    //                     if meta.status.is_success() {
-    //                         return Msg::SearchCompleted(body);
-    //                     }
-    //                 }
-    //                 Msg::SearchFailed(String::from("An error occured"))
-    //             });
-
-    //     self.ft = FetchService::fetch(req, callback).ok();
-    // })?;
-    Ok(())
-}
-
 #[function_component(SearchProject)]
 pub fn search_project() -> Html {
-    let query = use_state(|| "");
+    let query = use_state(|| String::from(""));
     let matches: UseStateHandle<Option<Vec<Project>>> = use_state(|| None);
-    let error: UseStateHandle<Option<String>> = use_state(|| None);
 
-    let handle_input = |_| {};
-    // let handle_input = self.link.callback(|e: InputData| Msg::SetSearch(e.value));
+    let handle_input = {
+        let query = query.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            query.set(input.value());
+        })
+    };
 
-    let handle_submit = |_| {};
-    // let handle_submit = self.link.callback(|e: FocusEvent| {
-    //     e.prevent_default();
-    //     Msg::PerformSearch
-    // });
+    let handle_submit = {
+        let query = query.clone();
+        let matches = matches.clone();
+        Callback::from(move |e: FocusEvent| {
+            e.prevent_default();
+            let query = query.clone();
+            let matches = matches.clone();
+            spawn_local(async move {
+                let res = search(query.as_ref()).await;
+                match res {
+                    Ok(res) => matches.set(Some(res)),
+                    Err(e) => log::error!("{:?}", e), // TODO: set visible error
+                };
+            });
+        })
+    };
 
-    let to_li = |project: &Project| {
+    let to_li = |p: &Project| {
         html! {
-            <li><a href={format!("/{}", project.id)}>{ &project.name }</a></li>
+            <li>
+                <Link<AppRoute> to={AppRoute::Project { id: p.id }}>
+                  { &p.name }
+                </Link<AppRoute>>
+            </li>
         }
     };
 
@@ -70,25 +65,26 @@ pub fn search_project() -> Html {
         }
     };
 
-    let error = match &*error {
-        Some(e) => html! {
-            <div class="error">
-            { e }
-            </div>
-        },
-        None => html! {},
-    };
-
     html! {
         <>
         <h3>{ "Search for an existing project" }</h3>
         <form onsubmit={handle_submit}>
             <label for="search-project-field">{ "Project name" }</label>
-            <input type="text" id="search-project-field" name="query" value={*query} oninput={handle_input} required={true}/>
+            <input type="text" id="search-project-field" name="query" value={(*query).clone()} onchange={handle_input} required={true}/>
             <input type="submit" value="Search"/>
         </form>
-        {error}
         {matches_html}
         </>
     }
+}
+
+async fn search(query: &str) -> Result<Vec<Project>, anyhow::Error> {
+    let search_url = Url::parse(&format!(
+        "{}/search/",
+        PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL not set"))?
+    ))?
+    .join(query)?;
+
+    let results = reqwest::get(search_url).await?.json().await?;
+    Ok(results)
 }

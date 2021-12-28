@@ -85,6 +85,11 @@ async fn search(query: &str) -> Result<Vec<Project>, anyhow::Error> {
     ))?
     .join(query)?;
 
-    let results = reqwest::get(search_url).await?.json().await?;
+    let results = reqwest::get(search_url)
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
     Ok(results)
 }

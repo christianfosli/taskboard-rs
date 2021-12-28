@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use taskboard_core_lib::{commands::CreateProjectCommand, Project};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement;
@@ -66,10 +67,11 @@ async fn create_the_project(name: &str) -> Result<Project, anyhow::Error> {
     let command = CreateProjectCommand { name: name.into() };
 
     let created = client
-        .post(PROJECT_SERVICE_URL.unwrap())
+        .post(PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL missing"))?)
         .json(&command)
         .send()
         .await?
+        .error_for_status()?
         .json()
         .await?;
 

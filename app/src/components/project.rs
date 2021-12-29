@@ -1,9 +1,9 @@
 use std::cmp::Reverse;
 
 use anyhow::anyhow;
-use gloo_dialogs::confirm;
+use gloo_dialogs::{confirm, prompt};
+use taskboard_core_lib::commands::{CreateTaskCommand, UpdateTaskCommand};
 use taskboard_core_lib::{uuid::Uuid, ProjectTasks, Status, Task};
-use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -29,21 +29,64 @@ pub struct ProjectProps {
 #[function_component(Project)]
 pub fn project(props: &ProjectProps) -> Html {
     let title = use_state(|| props.id.to_string());
-    let tasks: UseStateHandle<Vec<Task>> = use_state(|| vec![]);
+    let tasks: UseStateHandle<Vec<Task>> = use_state(Vec::new);
     let fetch_status = use_state(|| FetchStatus::Loading);
     let show_completed = use_state(|| false);
     let is_deleted = use_state(|| false);
 
-    let handle_task_create = Callback::from(|_| {
-        log::warn!("Should create a new task");
-    });
+    let handle_task_create = {
+        let project_id = props.id;
+        let tasks = tasks.clone();
 
-    let handle_task_update = Callback::from(|_t: Task| {
-        log::warn!("Should update the task but don't know how to yet");
-    });
+        move |_| {
+            let project_id = project_id;
+            let tasks = tasks.clone();
+            spawn_local(async move {
+                match add_task(&project_id).await {
+                    Ok(task) => {
+                        log::info!("Task {} created", task.number);
+                        let mut t = (*tasks).clone();
+                        t.push(task);
+                        tasks.set(t);
+                    }
+                    Err(e) => {
+                        log::error!("{:?}", e);
+                    }
+                }
+            });
+        }
+    };
+
+    let handle_task_update = {
+        let project_id = props.id;
+        let tasks = tasks.clone();
+
+        Callback::from(move |updated: Task| {
+            let tasks = tasks.clone();
+            spawn_local(async move {
+                match update_task(&project_id, &updated).await {
+                    Ok(updated) => {
+                        log::info!("Task {} updated", updated.number);
+                        let updated_tasks: Vec<Task> = (*tasks)
+                            .iter()
+                            .map(|t| {
+                                if t.number == updated.number {
+                                    updated.clone()
+                                } else {
+                                    t.clone()
+                                }
+                            })
+                            .collect();
+                        tasks.set(updated_tasks);
+                    }
+                    Err(e) => log::error!("{:?}", e),
+                };
+            });
+        })
+    };
 
     let handle_project_delete = {
-        let id = props.id.clone();
+        let id = props.id;
         let is_deleted = is_deleted.clone();
         move |_| {
             let is_deleted = is_deleted.clone();
@@ -58,7 +101,7 @@ pub fn project(props: &ProjectProps) -> Html {
                     }
                 });
             } else {
-                log::debug!("Delete project aborted")
+                log::debug!("Delete project aborted");
             }
         }
     };
@@ -76,7 +119,7 @@ pub fn project(props: &ProjectProps) -> Html {
     let task_list = {
         let to_taskbox = |t: Task| {
             html! {
-                <TaskBox onchange={&handle_task_update} data={t.clone()} />
+                <TaskBox onchange={&handle_task_update} data={t} />
             }
         };
 
@@ -101,13 +144,11 @@ pub fn project(props: &ProjectProps) -> Html {
 
     {
         let title = title.clone();
-        let fetch_status = fetch_status.clone();
         use_effect_with_deps(
             move |project_id| {
-                let project_id = (*project_id).clone();
+                let project_id = *project_id;
                 let title = title.clone();
                 let fetch_status = fetch_status.clone();
-                let tasks = tasks.clone();
                 spawn_local(async move {
                     let res = fetch_tasks(&project_id).await;
                     match res {
@@ -163,6 +204,7 @@ async fn fetch_tasks(project_id: &Uuid) -> Result<ProjectTasks, anyhow::Error> {
         project_id
     ))
     .await?
+    .error_for_status()?
     .json()
     .await?;
 
@@ -172,83 +214,68 @@ async fn fetch_tasks(project_id: &Uuid) -> Result<ProjectTasks, anyhow::Error> {
 async fn delete_project(id: &Uuid) -> Result<(), anyhow::Error> {
     let client = reqwest::Client::new();
 
-    let res = client
+    client
         .delete(format!(
             "{}/{}",
             PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL missing"))?,
             id
         ))
         .send()
+        .await?
+        .error_for_status()?;
+
+    Ok(())
+}
+
+async fn add_task(project_id: &Uuid) -> Result<Task, anyhow::Error> {
+    let title = prompt("Enter task name", None).ok_or_else(|| anyhow!("No task name specified"))?;
+
+    let estimate = match prompt("Enter estimate", None) {
+        Some(est) if est.is_empty() => None,
+        Some(est) => Some(est.parse::<u8>()?),
+        None => None,
+    };
+
+    let command = CreateTaskCommand {
+        project_id: *project_id,
+        title,
+        estimate,
+    };
+
+    let client = reqwest::Client::new();
+
+    let added = client
+        .post(format!(
+            "{}/task/create",
+            TASK_SERVICE_URL.ok_or_else(|| anyhow!("TASK_SERVICE_URL missing"))?,
+        ))
+        .json(&command)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
         .await?;
 
-    res.error_for_status()?;
-    Ok(())
+    Ok(added)
 }
 
-fn add_task() -> Result<(), JsValue> {
-    // let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window avilable"))?;
-    // let title = window
-    //     .prompt_with_message("Enter task name")?
-    //     .ok_or("No task name specified")?;
-    // let estimate: Option<u8> =
-    //     match window.prompt_with_message("Enter estimate (or leave blank)")? {
-    //         Some(est) => {
-    //             if est.is_empty() {
-    //                 None
-    //             } else {
-    //                 Some(
-    //                     est.parse::<u8>()
-    //                         .map_err(|err| JsValue::from(err.to_string()))?,
-    //                 )
-    //             }
-    //         }
-    //         None => None,
-    //     };
+async fn update_task(project_id: &Uuid, task: &Task) -> Result<Task, anyhow::Error> {
+    let command = UpdateTaskCommand {
+        project_id: *project_id,
+        updated_task: task.clone(),
+    };
 
-    // let command = CreateTaskCommand {
-    //     project_id: self.id,
-    //     title,
-    //     estimate,
-    // };
+    let client = reqwest::Client::new();
 
-    // let req = Request::post(&format!("{}/task/create", TASK_SERVICE_URL.unwrap()))
-    //     .header("Content-Type", "application/json")
-    //     .body(Json(&command))
-    //     .map_err(|_| JsValue::from("Failed to build post request"))?;
+    client
+        .put(format!(
+            "{}/task/update",
+            TASK_SERVICE_URL.ok_or_else(|| anyhow!("TASK_SERVICE_URL missing"))?
+        ))
+        .json(&command)
+        .send()
+        .await?
+        .error_for_status()?;
 
-    // let callback = self
-    //     .link
-    //     .callback(|res: Response<Json<Result<Task, anyhow::Error>>>| {
-    //         if let (meta, Json(Ok(body))) = res.into_parts() {
-    //             return match meta.status.is_success() {
-    //                 true => Msg::Added(body),
-    //                 false => Msg::SetError(format!("Add task failed with {:?}", meta.status)),
-    //             };
-    //         }
-    //         Msg::SetError("An error occured when adding task".to_owned())
-    //     });
-    Ok(())
-}
-
-fn update_task(task: Task) -> Result<(), anyhow::Error> {
-    // log::info!("Updating task {}...", task.number);
-
-    // let command = UpdateTaskCommand {
-    //     project_id: self.id,
-    //     updated_task: task.clone(),
-    // };
-
-    // let req = Request::put(&format!("{}/task/update", TASK_SERVICE_URL.unwrap()))
-    //     .header("Content-Type", "application/json")
-    //     .body(Json(&command))?;
-
-    // let callback = self
-    //     .link
-    //     .callback(move |res: Response<Result<String, anyhow::Error>>| {
-    //         match res.status().is_success() {
-    //             true => Msg::Updated(task.clone()),
-    //             false => Msg::SetError(format!("Update task failed due to {:?}", res.status())),
-    //         }
-    //     });
-    Ok(())
+    Ok(task.clone())
 }

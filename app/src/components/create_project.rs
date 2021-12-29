@@ -38,7 +38,7 @@ pub fn create_project() -> Html {
                         created.set(None);
                     }
                 }
-            })
+            });
         })
     };
 

@@ -21,7 +21,7 @@ pub enum AppRoute {
 
 fn switch(route: &AppRoute) -> Html {
     match route {
-        AppRoute::Project { id } => html! {< Project id={id.clone()} />},
+        AppRoute::Project { id } => html! {< Project id={*id} />},
         AppRoute::Health => html! {< Health /> },
         AppRoute::NotFound => html! { <h3> { "Page Not Found" } </h3> },
         AppRoute::Home => html! {< Home />},

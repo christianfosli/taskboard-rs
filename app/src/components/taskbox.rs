@@ -5,6 +5,7 @@ use yew::prelude::*;
 #[derive(Clone, PartialEq, Properties)]
 pub struct TaskBoxProps {
     pub onchange: Callback<Task>,
+    pub on_err: Callback<Option<String>>,
     pub data: Task,
 }
 
@@ -49,6 +50,7 @@ pub fn taskbox(props: &TaskBoxProps) -> Html {
 
     let handle_rem_change = {
         let onchange = props.onchange.clone();
+        let on_err = props.on_err.clone();
         let data = props.data.clone();
         move |_| {
             if let Some(rem) = prompt("Enter remaining work", None) {
@@ -58,7 +60,10 @@ pub fn taskbox(props: &TaskBoxProps) -> Html {
                         remaining_work: Some(rem),
                         ..data.clone()
                     }),
-                    Err(e) => log::error!("Error changing rem: {}", e),
+                    Err(e) => {
+                        log::error!("Error changing rem: {}", e);
+                        on_err.emit(Some(format!("Could not update rem due to: {}", e)));
+                    }
                 }
             }
         }

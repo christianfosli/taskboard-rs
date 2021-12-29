@@ -3,8 +3,13 @@ use yew::prelude::*;
 
 use crate::components::{create_project::CreateProject, search_project::SearchProject};
 
+#[derive(Clone, PartialEq, Properties)]
+pub struct HomeProps {
+    pub set_err: Callback<Option<String>>,
+}
+
 #[function_component(Home)]
-pub fn home() -> Html {
+pub fn home(props: &HomeProps) -> Html {
     let document = web_sys::window().unwrap().document().unwrap();
 
     let description = document
@@ -26,8 +31,8 @@ pub fn home() -> Html {
         <>
         <p>{ &description }</p>
         <p class="box-wip">{ &heads_up }</p>
-        < SearchProject />
-        < CreateProject />
+        < SearchProject set_err={props.set_err.clone()} />
+        < CreateProject set_err={props.set_err.clone()}/>
         </>
     }
 }

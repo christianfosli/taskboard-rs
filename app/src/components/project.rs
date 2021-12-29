@@ -24,6 +24,7 @@ enum FetchStatus {
 #[derive(Clone, PartialEq, Properties)]
 pub struct ProjectProps {
     pub id: Uuid,
+    pub set_err: Callback<Option<String>>,
 }
 
 #[function_component(Project)]
@@ -37,10 +38,12 @@ pub fn project(props: &ProjectProps) -> Html {
     let handle_task_create = {
         let project_id = props.id;
         let tasks = tasks.clone();
+        let set_err = props.set_err.clone();
 
         move |_| {
             let project_id = project_id;
             let tasks = tasks.clone();
+            let set_err = set_err.clone();
             spawn_local(async move {
                 match add_task(&project_id).await {
                     Ok(task) => {
@@ -50,7 +53,8 @@ pub fn project(props: &ProjectProps) -> Html {
                         tasks.set(t);
                     }
                     Err(e) => {
-                        log::error!("{:?}", e);
+                        log::error!("{}", e);
+                        set_err.emit(Some(e.to_string()));
                     }
                 }
             });
@@ -60,9 +64,11 @@ pub fn project(props: &ProjectProps) -> Html {
     let handle_task_update = {
         let project_id = props.id;
         let tasks = tasks.clone();
+        let set_err = props.set_err.clone();
 
         Callback::from(move |updated: Task| {
             let tasks = tasks.clone();
+            let set_err = set_err.clone();
             spawn_local(async move {
                 match update_task(&project_id, &updated).await {
                     Ok(updated) => {
@@ -79,7 +85,10 @@ pub fn project(props: &ProjectProps) -> Html {
                             .collect();
                         tasks.set(updated_tasks);
                     }
-                    Err(e) => log::error!("{:?}", e),
+                    Err(e) => {
+                        log::error!("{}", e);
+                        set_err.emit(Some(e.to_string()));
+                    }
                 };
             });
         })
@@ -88,8 +97,10 @@ pub fn project(props: &ProjectProps) -> Html {
     let handle_project_delete = {
         let id = props.id;
         let is_deleted = is_deleted.clone();
+        let set_err = props.set_err.clone();
         move |_| {
             let is_deleted = is_deleted.clone();
+            let set_err = set_err.clone();
             if confirm("Are you sure you want to delete this project?") {
                 spawn_local(async move {
                     match delete_project(&id).await {
@@ -97,7 +108,10 @@ pub fn project(props: &ProjectProps) -> Html {
                             log::info!("Deleted project {:?}", &id);
                             is_deleted.set(true);
                         }
-                        Err(e) => log::error!("{:?}", e),
+                        Err(e) => {
+                            log::error!("{}", e);
+                            set_err.emit(Some(e.to_string()));
+                        }
                     }
                 });
             } else {
@@ -119,7 +133,7 @@ pub fn project(props: &ProjectProps) -> Html {
     let task_list = {
         let to_taskbox = |t: Task| {
             html! {
-                <TaskBox onchange={&handle_task_update} data={t} />
+                <TaskBox onchange={&handle_task_update} on_err={&props.set_err} data={t} />
             }
         };
 
@@ -144,11 +158,13 @@ pub fn project(props: &ProjectProps) -> Html {
 
     {
         let title = title.clone();
+        let set_err = props.set_err.clone();
         use_effect_with_deps(
             move |project_id| {
                 let project_id = *project_id;
                 let title = title.clone();
                 let fetch_status = fetch_status.clone();
+                let set_err = set_err.clone();
                 spawn_local(async move {
                     let res = fetch_tasks(&project_id).await;
                     match res {
@@ -158,7 +174,8 @@ pub fn project(props: &ProjectProps) -> Html {
                             fetch_status.set(FetchStatus::Completed);
                         }
                         Err(e) => {
-                            log::error!("{:?}", e);
+                            log::error!("{}", e);
+                            set_err.emit(Some(e.to_string()));
                             fetch_status.set(FetchStatus::Failed);
                         }
                     }

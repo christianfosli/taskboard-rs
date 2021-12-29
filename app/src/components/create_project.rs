@@ -9,8 +9,13 @@ use crate::app::AppRoute;
 
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
+#[derive(Clone, PartialEq, Properties)]
+pub struct CreateProps {
+    pub set_err: Callback<Option<String>>,
+}
+
 #[function_component(CreateProject)]
-pub fn create_project() -> Html {
+pub fn create_project(props: &CreateProps) -> Html {
     let name = use_state(|| String::from(""));
     let created: UseStateHandle<Option<Project>> = use_state(|| None);
 
@@ -25,17 +30,20 @@ pub fn create_project() -> Html {
     let handle_submit = {
         let name = name.clone();
         let created = created.clone();
+        let set_err = props.set_err.clone();
         Callback::from(move |e: FocusEvent| {
             e.prevent_default();
             let name = name.clone();
             let created = created.clone();
+            let set_err = set_err.clone();
             spawn_local(async move {
                 let res = create_the_project(name.as_ref()).await;
                 match res {
                     Ok(res) => created.set(Some(res)),
                     Err(e) => {
-                        log::error!("{:?}", e);
+                        log::error!("{}", e);
                         created.set(None);
+                        set_err.emit(Some(e.to_string()))
                     }
                 }
             });

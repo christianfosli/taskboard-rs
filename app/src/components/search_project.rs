@@ -11,8 +11,13 @@ use crate::app::AppRoute;
 
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
+#[derive(Clone, PartialEq, Properties)]
+pub struct SearchProps {
+    pub set_err: Callback<Option<String>>,
+}
+
 #[function_component(SearchProject)]
-pub fn search_project() -> Html {
+pub fn search_project(props: &SearchProps) -> Html {
     let query = use_state(|| String::from(""));
     let matches: UseStateHandle<Option<Vec<Project>>> = use_state(|| None);
 
@@ -27,15 +32,20 @@ pub fn search_project() -> Html {
     let handle_submit = {
         let query = query.clone();
         let matches = matches.clone();
+        let set_err = props.set_err.clone();
         Callback::from(move |e: FocusEvent| {
             e.prevent_default();
             let query = query.clone();
             let matches = matches.clone();
+            let set_err = set_err.clone();
             spawn_local(async move {
                 let res = search(query.as_ref()).await;
                 match res {
                     Ok(res) => matches.set(Some(res)),
-                    Err(e) => log::error!("{:?}", e), // TODO: set visible error
+                    Err(e) => {
+                        log::error!("{}", e);
+                        set_err.emit(Some(e.to_string()))
+                    }
                 };
             });
         })

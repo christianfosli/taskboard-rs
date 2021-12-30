@@ -1,0 +1,12 @@
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name www.taskboard.cloud localhost;
+    root   /usr/share/nginx/html;
+
+    location / {
+        # if the file exists, serve it
+        # otherwise serve index.html to allow client-side routing
+        try_files $uri $uri/ /index.html =200;
+    }
+}

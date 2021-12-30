@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm-${VERSION} --out-dir ./out
 
 FROM nginx AS final
-COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=builder /usr/src/app/static /usr/share/nginx/html
 COPY --from=builder /usr/src/app/out /usr/share/nginx/html
 EXPOSE 80

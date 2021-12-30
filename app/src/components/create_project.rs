@@ -41,9 +41,9 @@ pub fn create_project(props: &CreateProps) -> Html {
                 match res {
                     Ok(res) => created.set(Some(res)),
                     Err(e) => {
-                        log::error!("{}", e);
+                        log::error!("Error creating project: {}", e);
                         created.set(None);
-                        set_err.emit(Some(e.to_string()))
+                        set_err.emit(Some(format!("Error creating project: {}", e)))
                     }
                 }
             });

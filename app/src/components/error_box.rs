@@ -10,7 +10,7 @@ pub struct ErrorProps {
 #[function_component(ErrorBox)]
 pub fn error_comp(props: &ErrorProps) -> Html {
     if props.err.is_some() {
-        // Unset the error after 10 seconds
+        // Unset the error after the user has likely finished reading it
         let set_err = props.set_err.clone();
         use_effect(move || {
             let handle = Timeout::new(10_000, move || set_err.emit(None));
@@ -21,11 +21,6 @@ pub fn error_comp(props: &ErrorProps) -> Html {
     }
 
     if let Some(error) = &props.err {
-        {
-            let set_err = props.set_err.clone();
-            Timeout::new(10_000, move || set_err.emit(None)).forget();
-        }
-
         html! {
         <div class="error">
             <h4>{ "An error occured" }</h4>

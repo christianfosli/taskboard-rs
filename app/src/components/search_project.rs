@@ -43,8 +43,8 @@ pub fn search_project(props: &SearchProps) -> Html {
                 match res {
                     Ok(res) => matches.set(Some(res)),
                     Err(e) => {
-                        log::error!("{}", e);
-                        set_err.emit(Some(e.to_string()))
+                        log::error!("Error searching for projects: {}", e);
+                        set_err.emit(Some(format!("Error searching for projects: {}", e)));
                     }
                 };
             });

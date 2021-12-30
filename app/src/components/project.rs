@@ -53,8 +53,8 @@ pub fn project(props: &ProjectProps) -> Html {
                         tasks.set(t);
                     }
                     Err(e) => {
-                        log::error!("{}", e);
-                        set_err.emit(Some(e.to_string()));
+                        log::error!("Error creating task: {}", e);
+                        set_err.emit(Some(format!("Error creating task: {}", e)));
                     }
                 }
             });
@@ -86,8 +86,8 @@ pub fn project(props: &ProjectProps) -> Html {
                         tasks.set(updated_tasks);
                     }
                     Err(e) => {
-                        log::error!("{}", e);
-                        set_err.emit(Some(e.to_string()));
+                        log::error!("Error updating task: {}", e);
+                        set_err.emit(Some(format!("Error updating task: {}", e)));
                     }
                 };
             });
@@ -109,8 +109,8 @@ pub fn project(props: &ProjectProps) -> Html {
                             is_deleted.set(true);
                         }
                         Err(e) => {
-                            log::error!("{}", e);
-                            set_err.emit(Some(e.to_string()));
+                            log::error!("Error deleting project: {}", e);
+                            set_err.emit(Some(format!("Error deleting project: {}", e)));
                         }
                     }
                 });
@@ -174,8 +174,8 @@ pub fn project(props: &ProjectProps) -> Html {
                             fetch_status.set(FetchStatus::Completed);
                         }
                         Err(e) => {
-                            log::error!("{}", e);
-                            set_err.emit(Some(e.to_string()));
+                            log::error!("Error fetching tasks: {}", e);
+                            set_err.emit(Some(format!("Error fetching tasks: {}", e)));
                             fetch_status.set(FetchStatus::Failed);
                         }
                     }

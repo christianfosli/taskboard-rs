@@ -1,60 +1,38 @@
 use log::error;
-use yew::{html, utils::document, Component, ComponentLink};
+use yew::prelude::*;
 
 use crate::components::{create_project::CreateProject, search_project::SearchProject};
 
-pub struct Home {
-    _link: ComponentLink<Self>,
-    description: String,
-    heads_up: String,
+#[derive(Clone, PartialEq, Properties)]
+pub struct HomeProps {
+    pub set_err: Callback<Option<String>>,
 }
 
-pub enum Msg {}
+#[function_component(Home)]
+pub fn home(props: &HomeProps) -> Html {
+    let document = web_sys::window().unwrap().document().unwrap();
 
-impl Component for Home {
-    type Message = Msg;
-    type Properties = ();
+    let description = document
+        .query_selector("head > meta[name=description]")
+        .unwrap_or(None)
+        .and_then(|el| el.get_attribute("content"))
+        .unwrap_or_else(|| {
+            error!("Failed to get app description from document head");
+            String::default()
+        });
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        // Query description from html document to avoid repetition.
-        let description = document()
-            .query_selector("head > meta[name=description]")
-            .unwrap_or(None)
-            .and_then(|el| el.get_attribute("content"))
-            .unwrap_or_else(|| {
-                error!("Failed to get app description from document head");
-                String::default()
-            });
-
-        let heads_up = "🚧 This is mostly a proof-of-concept to play with some fun technology.
+    let heads_up = "🚧 This is mostly a proof-of-concept to play with some fun technology.
             Feel free to add your own projects/tasks,
             but be aware that they will be publically accessible and may be edited
             or removed by others 🚧"
-            .to_string();
+        .to_string();
 
-        Self {
-            _link: link,
-            description,
-            heads_up,
-        }
-    }
-
-    fn update(&mut self, _msg: Self::Message) -> yew::ShouldRender {
-        false
-    }
-
-    fn change(&mut self, _props: Self::Properties) -> yew::ShouldRender {
-        false
-    }
-
-    fn view(&self) -> yew::Html {
-        html! {
-            <>
-            <p>{ &self.description }</p>
-            <p class="box-wip">{ &self.heads_up }</p>
-            < SearchProject />
-            < CreateProject />
-            </>
-        }
+    html! {
+        <>
+        <p>{ &description }</p>
+        <p class="box-wip">{ &heads_up }</p>
+        < SearchProject set_err={props.set_err.clone()} />
+        < CreateProject set_err={props.set_err.clone()}/>
+        </>
     }
 }

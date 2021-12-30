@@ -1,147 +1,106 @@
+use gloo_dialogs::prompt;
 use taskboard_core_lib::{Status, Task};
-use wasm_bindgen::JsValue;
-use yew::{prelude::*, web_sys};
-
-pub struct TaskBox {
-    link: ComponentLink<Self>,
-    onchange: Callback<Task>,
-    data: Task,
-    error: Option<String>,
-}
-
-pub enum Msg {
-    ChangeTitle,
-    StatusChanged(Status),
-    ChangeRem,
-    SetError(Option<String>),
-}
+use yew::prelude::*;
 
 #[derive(Clone, PartialEq, Properties)]
-pub struct Props {
+pub struct TaskBoxProps {
     pub onchange: Callback<Task>,
+    pub on_err: Callback<Option<String>>,
     pub data: Task,
 }
 
-impl Component for TaskBox {
-    type Message = Msg;
-    type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            link,
-            onchange: props.onchange,
-            data: props.data,
-            error: None,
+#[function_component(TaskBox)]
+pub fn taskbox(props: &TaskBoxProps) -> Html {
+    let rem_work = match &props.data.remaining_work {
+        Some(hours) => format!("rem: {} hrs", hours),
+        None => String::from("rem: ?"),
+    };
+
+    let handle_status_change = {
+        let onchange = props.onchange.clone();
+        let data = props.data.clone();
+
+        move |status: Status| {
+            let remaining_work = match status {
+                Status::Done => Some(0),
+                Status::Doing if data.status == Status::Done => None,
+                _ => data.remaining_work,
+            };
+
+            onchange.emit(Task {
+                status,
+                remaining_work,
+                ..data
+            });
         }
-    }
+    };
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::ChangeTitle => {
-                let window = web_sys::window().expect("No window available");
-                let title = window.prompt_with_message("Enter task name").ok().flatten();
-                match title {
-                    Some(title) => self.onchange.emit(Task {
-                        title,
-                        ..self.data.clone()
-                    }),
-                    None => log::warn!(
-                        "Not changing title for task {}. Operation failed or was cancelled.",
-                        self.data.number
-                    ),
-                }
+    let handle_title_change = {
+        let onchange = props.onchange.clone();
+        let data = props.data.clone();
+
+        move |_| {
+            if let Some(title) = prompt("Enter task name", None) {
+                onchange.emit(Task { title, ..data });
+            } else {
+                log::warn!("Not changing title. Operation canceled");
             }
-            Msg::StatusChanged(status) => {
-                let remaining_work = match status {
-                    Status::Done => Some(0),
-                    Status::Doing if self.data.status == Status::Done => None,
-                    _ => self.data.remaining_work,
-                };
+        }
+    };
 
-                self.onchange.emit(Task {
-                    status,
-                    remaining_work,
-                    ..self.data.clone()
-                })
-            }
-            Msg::ChangeRem => {
-                let window = web_sys::window().expect("No window available");
-
-                let new_rem = window
-                    .prompt_with_message("Enter remaining work")
-                    .and_then(|rem: Option<String>| {
-                        rem.ok_or_else(|| JsValue::from("No value provided"))
-                    })
-                    .and_then(|rem: String| {
-                        rem.parse::<u8>()
-                            .map_err(|err| JsValue::from(err.to_string()))
-                    });
-
-                match new_rem {
-                    Ok(rem) => self.onchange.emit(Task {
+    let handle_rem_change = {
+        let onchange = props.onchange.clone();
+        let on_err = props.on_err.clone();
+        let data = props.data.clone();
+        move |_| {
+            if let Some(rem) = prompt("Enter remaining work", None) {
+                let rem = rem.parse::<u8>();
+                match rem {
+                    Ok(rem) => onchange.emit(Task {
                         remaining_work: Some(rem),
-                        ..self.data.clone()
+                        ..data.clone()
                     }),
-                    Err(e) => self.link.send_message(Msg::SetError(e.as_string())),
+                    Err(e) => {
+                        log::error!("Error changing rem: {}", e);
+                        on_err.emit(Some(format!("Could not update rem due to: {}", e)));
+                    }
                 }
-            }
-            Msg::SetError(error) => {
-                match &error {
-                    Some(e) => log::error!("{}", e),
-                    None => (),
-                }
-                self.error = error;
-                return true;
             }
         }
-        false
-    }
+    };
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.data = props.data;
-        self.onchange = props.onchange;
-        true
-    }
-
-    fn view(&self) -> Html {
-        let rem_work = match self.data.remaining_work {
-            Some(hours) => format!("rem: {} hrs", hours),
-            None => String::from("rem: ?"),
-        };
-
-        let action = match self.data.status {
+    let action = {
+        let status = props.data.status;
+        let handle_status_change_2 = handle_status_change.clone();
+        match status {
             Status::Todo => html! {
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "Do -->" }</button>
+                <button onclick={move |_| handle_status_change.clone()(Status::Doing)}>{ "Do -->" }</button>
             },
             Status::Doing => html! {
                 <>
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Todo))>{ "<-- Not doing" }</button>
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Done))>{ "Done -->" }</button>
+                <button onclick={move |_| {handle_status_change.clone()(Status::Todo)}}>{ "<-- Not doing" }</button>
+                <button onclick={move |_| {handle_status_change_2.clone()(Status::Done)}}>{ "Done -->" }</button>
                 </>
             },
             Status::Done => html! {
-                <button onclick=self.link.callback(|_| Msg::StatusChanged(Status::Doing))>{ "<-- Not done" }</button>
+                <button onclick={move |_| {handle_status_change.clone()(Status::Doing)}}>{ "<-- Not done" }</button>
             },
-        };
-
-        html! {
-            <li class=format!("taskbox {:?}", self.data.status)>
-                <h3>{ &self.data.title } </h3>
-                <p class="status">{ format!("status: {:?}", self.data.status) }</p>
-                <p>{rem_work}  </p>
-                <div>
-                    <button onclick=self.link.callback(|_| Msg::ChangeTitle)>{ "Edit title" }</button>
-                    <button disabled=self.data.status==Status::Done onclick=self.link.callback(|_| Msg::ChangeRem)>{ "Update rem" }</button>
-                </div>
-                <div>
-                    {action}
-                </div>
-                <p class="error">{
-                    match &self.error {
-                        Some(e) => e,
-                        None => ""
-                    }
-                }</p>
-            </li>
         }
+    };
+
+    html! {
+
+        <li class={format!("taskbox {:?}", props.data.status)}>
+            <h3>{ &props.data.title } </h3>
+            <p class="status">{ format!("status: {:?}", props.data.status) }</p>
+            <p>{rem_work}  </p>
+            <div>
+                <button onclick={handle_title_change}>{ "Edit title" }</button>
+                <button disabled={props.data.status==Status::Done} onclick={handle_rem_change}>{ "Update rem" }</button>
+            </div>
+            <div>
+                {action}
+            </div>
+        </li>
     }
 }

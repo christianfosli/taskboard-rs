@@ -1,150 +1,105 @@
+use wasm_bindgen_futures::spawn_local;
+
 use anyhow::anyhow;
+use reqwest::Url;
 use taskboard_core_lib::Project;
-use url::Url;
-use yew::{
-    format::{Json, Nothing},
-    prelude::*,
-    services::fetch::Response,
-    services::{
-        fetch::{FetchTask, Request},
-        FetchService,
-    },
-};
+use web_sys::HtmlInputElement;
+use yew::prelude::*;
+use yew_router::prelude::*;
+
+use crate::app::AppRoute;
 
 const PROJECT_SERVICE_URL: Option<&'static str> = option_env!("PROJECT_SERVICE_URL");
 
-pub struct SearchProject {
-    link: ComponentLink<Self>,
-    search_query: String,
-    matches: Option<Vec<Project>>,
-    ft: Option<FetchTask>,
-    error: Option<String>,
+#[derive(Clone, PartialEq, Properties)]
+pub struct SearchProps {
+    pub set_err: Callback<Option<String>>,
 }
 
-pub enum Msg {
-    SetSearch(String),
-    PerformSearch,
-    SearchCompleted(Vec<Project>),
-    SearchFailed(String),
-}
+#[function_component(SearchProject)]
+pub fn search_project(props: &SearchProps) -> Html {
+    let query = use_state(|| String::from(""));
+    let matches: UseStateHandle<Option<Vec<Project>>> = use_state(|| None);
 
-impl SearchProject {
-    fn do_search(&mut self) -> Result<(), anyhow::Error> {
-        let search_url = Url::parse(&format!(
-            "{}/search/",
-            PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL not set"))?
-        ))?
-        .join(&self.search_query)?;
+    let handle_input = {
+        let query = query.clone();
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            query.set(input.value());
+        })
+    };
 
-        Request::get(search_url.as_str()).body(Nothing).map(|req| {
-            let callback =
-                self.link
-                    .callback(|res: Response<Json<Result<Vec<Project>, anyhow::Error>>>| {
-                        if let (meta, Json(Ok(body))) = res.into_parts() {
-                            if meta.status.is_success() {
-                                return Msg::SearchCompleted(body);
-                            }
-                        }
-                        Msg::SearchFailed(String::from("An error occured"))
-                    });
-
-            self.ft = FetchService::fetch(req, callback).ok();
-        })?;
-
-        Ok(())
-    }
-}
-
-impl Component for SearchProject {
-    type Message = Msg;
-
-    type Properties = ();
-
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            link,
-            search_query: String::from(""),
-            matches: None,
-            ft: None,
-            error: None,
-        }
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::SetSearch(query) => self.search_query = query,
-            Msg::PerformSearch => {
-                self.matches = None;
-
-                self.do_search().unwrap_or_else(|err| {
-                    self.link.send_message(Msg::SearchFailed(err.to_string()))
-                });
-                return false;
-            }
-            Msg::SearchCompleted(matches) => {
-                self.matches = Some(matches);
-                self.error = None;
-            }
-            Msg::SearchFailed(message) => {
-                log::error!("Search Failed: {}", &message);
-                self.error = Some(message);
-            }
-        }
-        true
-    }
-
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
-    }
-
-    fn view(&self) -> Html {
-        let handle_input = self.link.callback(|e: InputData| Msg::SetSearch(e.value));
-
-        let handle_submit = self.link.callback(|e: FocusEvent| {
+    let handle_submit = {
+        let query = query.clone();
+        let matches = matches.clone();
+        let set_err = props.set_err.clone();
+        Callback::from(move |e: FocusEvent| {
             e.prevent_default();
-            Msg::PerformSearch
-        });
+            let query = query.clone();
+            let matches = matches.clone();
+            let set_err = set_err.clone();
+            spawn_local(async move {
+                let res = search(query.as_ref()).await;
+                match res {
+                    Ok(res) => matches.set(Some(res)),
+                    Err(e) => {
+                        log::error!("{}", e);
+                        set_err.emit(Some(e.to_string()))
+                    }
+                };
+            });
+        })
+    };
 
-        let to_li = |project: &Project| {
-            html! {
-                <li><a href={format!("/{}", project.id)}>{ &project.name }</a></li>
-            }
-        };
-
-        let matches = match self.matches.clone() {
-            None => html! {},
-            Some(m) if m.is_empty() => html! {<p>{ "No matches" }</p>},
-            Some(m) => {
-                let matches = m.iter().map(|p| to_li(p)).collect::<Html>();
-
-                html! {
-                    <ul>
-                    {matches}
-                    </ul>
-                }
-            }
-        };
-
-        let error = match &self.error {
-            Some(e) => html! {
-                <div class="error">
-                { e }
-                </div>
-            },
-            None => html! {},
-        };
-
+    let to_li = |p: &Project| {
         html! {
-            <>
-            <h3>{ "Search for an existing project" }</h3>
-            <form onsubmit={handle_submit}>
-                <label for="search-project-field">{ "Project name" }</label>
-                <input type="text" id="search-project-field" name="query" value={self.search_query.clone()} oninput={handle_input} required={true}/>
-                <input type="submit" value="Search"/>
-            </form>
-            {error}
-            {matches}
-            </>
+            <li>
+                <Link<AppRoute> to={AppRoute::Project { id: p.id }}>
+                  { &p.name }
+                </Link<AppRoute>>
+            </li>
         }
+    };
+
+    let matches_html = match matches.as_ref() {
+        None => html! {},
+        Some(m) if m.is_empty() => html! {<p>{ "No matches" }</p>},
+        Some(m) => {
+            let matches = m.iter().map(|p| to_li(p)).collect::<Html>();
+
+            html! {
+                <ul>
+                {matches}
+                </ul>
+            }
+        }
+    };
+
+    html! {
+        <>
+        <h3>{ "Search for an existing project" }</h3>
+        <form onsubmit={handle_submit}>
+            <label for="search-project-field">{ "Project name" }</label>
+            <input type="text" id="search-project-field" name="query" value={(*query).clone()} onchange={handle_input} required={true}/>
+            <input type="submit" value="Search"/>
+        </form>
+        {matches_html}
+        </>
     }
+}
+
+async fn search(query: &str) -> Result<Vec<Project>, anyhow::Error> {
+    let search_url = Url::parse(&format!(
+        "{}/search/",
+        PROJECT_SERVICE_URL.ok_or_else(|| anyhow!("PROJECT_SERVICE_URL not set"))?
+    ))?
+    .join(query)?;
+
+    let results = reqwest::get(search_url)
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(results)
 }

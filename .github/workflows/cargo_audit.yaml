@@ -1,4 +1,4 @@
-name: security-scan
+name: cargo_audit
 
 on:
   schedule:
@@ -25,16 +25,3 @@ jobs:
       - name: scan task service
         run: cargo-audit audit
         working-directory: ./task-service
-
-  scan_docker_images:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: azure/container-scan@v0
-        with:
-          image-name: christianfosli/taskboard-app
-      - uses: azure/container-scan@v0
-        with:
-          image-name: christianfosli/taskboard-project-service
-      - uses: azure/container-scan@v0
-        with:
-          image-name: christianfosli/taskboard-task-service

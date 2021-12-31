@@ -1,4 +1,4 @@
-FROM rust:1.56 as builder
+FROM rust:1.57 as builder
 WORKDIR /usr/src/app
 ARG CARGO_INSTALL_OPTIONS
 COPY . .

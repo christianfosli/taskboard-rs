@@ -1,0 +1,34 @@
+name: cargo_audit
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 0 * * SUN'
+  workflow_dispatch:
+
+jobs:
+  scan_cargo_deps:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - run: cargo install cargo-audit
+
+      - name: scan core-lib
+        run: cargo-audit audit
+        working-directory: ./core-lib
+
+      - name: scan app
+        run: cargo-audit audit
+        working-directory: ./app
+
+      - name: scan project service
+        run: cargo-audit audit
+        working-directory: ./project-service
+
+      - name: scan task service
+        run: cargo-audit audit
+        working-directory: ./task-service

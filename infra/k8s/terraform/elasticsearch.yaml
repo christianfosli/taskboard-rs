@@ -3,7 +3,7 @@ kind: Elasticsearch
 metadata:
   name: taskboard
 spec:
-  version: 7.12.0
+  version: 7.16.2
   http:
     tls:
       selfSignedCertificate:

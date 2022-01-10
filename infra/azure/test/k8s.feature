@@ -15,7 +15,7 @@ Feature: Azure Kubernetes Service
       | name                      | aks-taskboard |
       | location                  | northeurope   |
       | resource_group_name       | rg-taskboard  |
-      | kubernetes_version        | 1.21.2        |
+      | kubernetes_version        | 1.22.4        |
       | automatic_channel_upgrade | patch         |
 
 
@@ -31,7 +31,7 @@ Feature: Azure Kubernetes Service
       | min_count            | 1            |
       | max_count            | 2            |
       | vm_size              | Standard_B2s |
-      | orchestrator_version | 1.21.2       |
+      | orchestrator_version | 1.22.4       |
       | os_disk_size_gb      | 32           |
       | max_pods             | 50           |
 

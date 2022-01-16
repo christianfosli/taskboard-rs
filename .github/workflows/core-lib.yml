@@ -2,12 +2,12 @@ name: core-lib
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - core-lib/**
       - .github/workflows/core-lib.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - core-lib/**
       - .github/workflows/core-lib.yml

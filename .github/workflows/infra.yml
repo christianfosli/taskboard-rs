@@ -2,12 +2,12 @@ name: infra
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - infra/**
       - .github/workflows/infra.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - infra/**
       - .github/workflows/infra.yml

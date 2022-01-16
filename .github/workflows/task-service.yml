@@ -2,12 +2,12 @@ name: task-service
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - task-service/**
       - .github/workflows/task-service.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - task-service/**
       - .github/workflows/task-service.yml

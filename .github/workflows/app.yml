@@ -2,12 +2,12 @@ name: app
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - app/**
       - .github/workflows/app.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - app/**
       - .github/workflows/app.yml

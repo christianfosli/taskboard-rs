@@ -2,12 +2,12 @@ name: project-service
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - project-service/**
       - .github/workflows/project-service.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - project-service/**
       - .github/workflows/project-service.yml

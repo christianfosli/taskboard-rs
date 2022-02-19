@@ -33,12 +33,13 @@ resource "helm_release" "eckOperator" {
   }
 }
 
-# --- The below resources should ideally be put into a separate namespace
-#     just putting them in default for now, since that makes it easy for
-#     microservices to get the credentials for the elasticsearch cluster ---
-
 resource "kubectl_manifest" "elasticSearchCluster" {
   yaml_body  = file("elasticsearch.yaml")
+  depends_on = [helm_release.eckOperator]
+}
+
+resource "kubectl_manifest" "kibana" {
+  yaml_body  = file("kibana.yaml")
   depends_on = [helm_release.eckOperator]
 }
 

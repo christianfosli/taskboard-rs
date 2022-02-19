@@ -69,9 +69,11 @@ pub fn health() -> Html {
         <p>{ "Project service " }{ format!("{:?}", *project_svc) }</p>
         <br/>
         <p>
-        { "More details are available " }
-        <a href="https://metrics.taskboard.cloud">{ "here" }</a>
-        { "."}
+        { "More metrics on " }
+        <a href="https://metrics.taskboard.cloud">{ "metrics.taskboard.cloud" }</a>
+        { ". Logs on https://logs.taskboard.cloud" }
+        <a href="https://logs.taskboard.cloud">{ "logs.taskboard.cloud" }</a>
+        { "." }
         </p>
         </>
     }

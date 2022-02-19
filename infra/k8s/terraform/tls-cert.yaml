@@ -11,6 +11,7 @@ spec:
   - www.taskboard.cloud
   - api.taskboard.cloud
   - metrics.taskboard.cloud
+  - logs.taskboard.cloud
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer

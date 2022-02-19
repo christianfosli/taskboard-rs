@@ -40,3 +40,7 @@ resource "kubectl_manifest" "appIngress" {
 resource "kubectl_manifest" "apiIngress" {
   yaml_body = file("api-ingress.yaml")
 }
+
+resource "kubectl_manifest" "logsIngress" {
+  yaml_body = file("logs-ingress.yaml")
+}

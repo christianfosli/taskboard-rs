@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logs-ingress
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - logs.metrics.com
+    secretName: tls-cert
+  rules:
+  - host: logs.taskboard.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taskboard-kb-http
+            port:
+              name: http

@@ -1,0 +1,22 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: taskboard
+spec:
+  version: 7.17.0
+  count: 1
+  elasticsearchRef:
+    name: taskboard
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  podTemplate:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+        config.linkerd.io/proxy-cpu-request: 20m
+        config.linkerd.io/proxy-memory-requests: 5Mi
+        kubectl.kubernetes.io/default-container: kibana
+  config:
+    server.publicBaseUrl: https://logs.taskboard.cloud

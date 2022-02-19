@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        linkerd.io/inject: enabled
+        linkerd.io/inject: "enabled"
         config.linkerd.io/proxy-cpu-request: 20m
         config.linkerd.io/proxy-memory-request: 5Mi
         kubectl.kubernetes.io/default-container: fluentd

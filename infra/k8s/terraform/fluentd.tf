@@ -1,5 +1,5 @@
-resource "kubernetes_manifest" "fluentd" {
-  manifest = yamldecode(file("fluentd.yaml"))
+resource "kubectl_manifest" "fluentd" {
+  yaml_body = file("fluentd.yaml")
 }
 
 resource "random_password" "fluent" {

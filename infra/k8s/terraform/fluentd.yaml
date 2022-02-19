@@ -30,7 +30,7 @@ spec:
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
         env:
           - name:  FLUENT_ELASTICSEARCH_HOST
-            value: taskboard-es-http
+            value: taskboard-es-http.default.svc.cluster.local
           - name:  FLUENT_ELASTICSEARCH_PORT
             value: "9200"
           - name: FLUENT_ELASTICSEARCH_SCHEME

@@ -25,3 +25,8 @@ resource "kubernetes_secret" "taskboardEsFluentUser" {
 
 # MANUAL STEP: Create a user in elastic (i.e. through UI in Kibana)
 # that matches the credentials in the secret above
+
+# MANUAL STEP:
+# fluentd by defaults sends logs to index logstash-${date}
+# add index pattern, index pattern template, and index lifecycle management
+# in kibana

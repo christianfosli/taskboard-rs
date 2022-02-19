@@ -16,6 +16,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: kibana-kb-http
+            name: taskboard-kb-http
             port:
               name: http

@@ -20,16 +20,28 @@ Elasticsearch might be a weird choice for persisting data. I chose it to learn m
 
 ## Architecture Overview
 
-Here's a high level overview of the different services:
+Here's a high level overview of the different exposed services:
 
-![Architecture overview of taskboard.cloud](architecture-overview.svg)
+```mermaid
+graph TD
+    subgraph kubernetes
+    I(ingress-nginx) ---> APP(taskboard app<br/>www.taskboard.cloud)
+    I ---> P(project service<br/>api.taskboard.cloud/project)
+    I ---> T(task service<br/>api.taskboard.cloud/task)
+    I ----> M(linkerd dashboard<br/>metrics.taskboard.cloud)
+    I ----> K(kibana<br/>logs.taskboard.cloud)
+end
+```
 
-## Metrics and Monitoring
+Elasticsearch is used for persisting application data and logs.
+
+## Metrics, Logs and Monitoring
 
 Basic health info is available at
 [www.taskboard.cloud/healthz](https://www.taskboard.cloud/healthz).
 
-More detailed metrics are available on [metrics.taskboard.cloud](https://metrics.taskboard.cloud).
+More detailed metrics are available on [metrics.taskboard.cloud](https://metrics.taskboard.cloud),
+and logs are available through kibana on [logs.taskboard.cloud](https://logs.taskboard.cloud).
 These are password protected. Let me know if you need would like access.
 
 Note that I'm running all of this on a **single-node cheap-ish AKS cluster**.

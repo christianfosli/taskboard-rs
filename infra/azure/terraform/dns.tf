@@ -38,7 +38,7 @@ resource "azurerm_dns_a_record" "metrics" {
 resource "azurerm_dns_a_record" "logs" {
   name                = "logs"
   zone_name           = azurerm_dns_zone.pubZone.name
-  resource_group_name = data.aurerm_resource_group.rg.name
+  resource_group_name = data.azurerm_resource_group.rg.name
   ttl                 = 600
   target_resource_id  = data.azurerm_lb.aksloadbalancer.frontend_ip_configuration.0.public_ip_address_id
 }

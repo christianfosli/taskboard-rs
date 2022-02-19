@@ -18,3 +18,5 @@ spec:
         config.linkerd.io/proxy-cpu-request: 20m
         config.linkerd.io/proxy-memory-requests: 5Mi
         kubectl.kubernetes.io/default-container: kibana
+  config:
+    server.publicBaseUrl: https://logs.taskboard.cloud

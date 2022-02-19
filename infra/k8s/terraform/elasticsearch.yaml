@@ -18,9 +18,9 @@ spec:
       metadata:
         annotations:
           linkerd.io/inject: enabled
-          config.linkerd.io/proxy-cpu-request: 10m
+          config.linkerd.io/proxy-cpu-request: 20m
           config.linkerd.io/proxy-memory-request: 5Mi
-          kubectl.kubernetes.io/default-logs-container: elasticsearch
+          kubectl.kubernetes.io/default-container: elasticsearch
       spec:
         containers:
         - name: elasticsearch

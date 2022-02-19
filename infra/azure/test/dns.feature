@@ -91,3 +91,24 @@ Feature: DNS and Custom Domain
     And it has target_resource_id
     Then it must contain target_resource_id
     And its value must match the "^.+kubernetes.+$" regex
+
+
+  Scenario Outline: DNS A Record - logs
+    Given I have azurerm_dns_a_record defined
+    When its address is azurerm_dns_a_record.logs
+    Then it must contain <key>
+    And its value must be <value>
+
+    Examples:
+      | key                 | value           |
+      | name                | logs            |
+      | zone_name           | taskboard.cloud |
+      | resource_group_name | rg-taskboard    |
+      | ttl                 | 600             |
+
+  Scenario: DNS A Record - logs - must include resource id of cluster ingress LB
+    Given I have azurerm_dns_a_record defined
+    When its address is azurerm_dns_a_record.logs
+    And it has target_resource_id
+    Then it must contain target_resource_id
+    And its value must match the "^.+kubernetes.+$" regex

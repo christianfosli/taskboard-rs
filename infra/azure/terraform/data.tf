@@ -3,7 +3,7 @@ variable "RESOURCE_GROUP" {
 }
 
 variable "K8S_VERSION" {
-  default = "1.22"
+  default = "1.22.6"
 }
 
 variable "AKS_NODE_POOL" {

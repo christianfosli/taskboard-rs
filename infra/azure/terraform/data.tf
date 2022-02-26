@@ -6,6 +6,11 @@ variable "K8S_VERSION" {
   default = "1.22.6"
 }
 
+variable "K8S_AD_ADMIN_GROUPS" {
+  type        = set(string)
+  description = "List of object ids with admin access to AKS cluster"
+}
+
 variable "AKS_NODE_POOL" {
   default = {
     min_count       = 1

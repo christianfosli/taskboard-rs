@@ -18,11 +18,21 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   network_profile {
-    network_plugin    = "azure"
+    network_plugin    = "kubenet"
     load_balancer_sku = "Basic"
   }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  role_based_access_control {
+    enabled = true
+
+    azure_active_directory {
+      managed                = true
+      azure_rbac_enabled     = true
+      admin_group_object_ids = var.K8S_AD_ADMIN_GROUPS
+    }
   }
 }

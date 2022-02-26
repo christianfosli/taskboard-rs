@@ -40,3 +40,20 @@ Feature: Azure Kubernetes Service
     Then it must contain network_profile
     And it must contain load_balancer_sku
     And its value must be Basic
+
+
+  Scenario: AKS role based access control enabled
+    Given I have azurerm_kubernetes_cluster defined
+    When its address is azurerm_kubernetes_cluster.k8s
+    Then it must contain role_based_access_control
+    And it must contain enabled
+    And its value must be true
+
+
+  Scenario: AKS role based access control - Azure AD rbac enabled
+    Given I have azurerm_kubernetes_cluster defined
+    When its address is azurerm_kubernetes_cluster.k8s
+    Then it must contain role_based_access_control
+    And it must contain azure_active_directory
+    And it must contain azure_rbac_enabled
+    And its value must be true

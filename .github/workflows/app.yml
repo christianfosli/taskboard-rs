@@ -55,7 +55,7 @@ jobs:
           SUBSCRIPTION: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       - name: login kubectl
         run: |
-          az aks get-credentials -n "aks-taskboard" -g "rg-taskboard"
+          az aks get-credentials -n "aks-taskboard" -g "rg-taskboard" --admin
           kubectl version --short
       - name: patch manifest
         run: sed -i "s|christianfosli/taskboard-app|christianfosli/taskboard-app:$GITHUB_SHA|" k8s.yml

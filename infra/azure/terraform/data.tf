@@ -3,7 +3,7 @@ variable "RESOURCE_GROUP" {
 }
 
 variable "K8S_VERSION" {
-  default = "1.22.6"
+  default = "1.23.5"
 }
 
 variable "AKS_NODE_POOL" {
@@ -15,6 +15,13 @@ variable "AKS_NODE_POOL" {
     max_pods        = 50
   }
 }
+
+variable "AKS_AD_ADMIN" {
+  type        = string
+  description = "Object ID of person to administrate the AKS cluster"
+}
+
+data "azurerm_client_config" "current" {}
 
 data "azurerm_resource_group" "rg" {
   name = var.RESOURCE_GROUP

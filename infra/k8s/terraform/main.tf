@@ -37,7 +37,7 @@ provider "azurerm" {
 provider "helm" {
   kubernetes {
     config_path    = "~/.kube/config"
-    config_context = "aks-taskboard"
+    config_context = "aks-taskboard-admin"
   }
 }
 
@@ -45,10 +45,10 @@ provider "kubectl" {
   # Replace with official kubernetes provider when alpha version
   # with CRD support matures
   config_path    = "~/.kube/config"
-  config_context = "aks-taskboard"
+  config_context = "aks-taskboard-admin"
 }
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
-  config_context = "aks-taskboard"
+  config_context = "aks-taskboard-admin"
 }

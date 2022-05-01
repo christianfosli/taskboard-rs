@@ -9,6 +9,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::app::AppRoute;
+use crate::components::edit_task::EditTask;
 use crate::components::taskbox::TaskBox;
 
 const TASK_SERVICE_URL: Option<&'static str> = option_env!("TASK_SERVICE_URL");
@@ -31,6 +32,7 @@ pub struct ProjectProps {
 pub fn project(props: &ProjectProps) -> Html {
     let title = use_state(|| props.id.to_string());
     let tasks: UseStateHandle<Vec<Task>> = use_state(Vec::new);
+    let editing: UseStateHandle<Option<Task>> = use_state(|| None);
     let fetch_status = use_state(|| FetchStatus::Loading);
     let show_completed = use_state(|| false);
     let is_deleted = use_state(|| false);
@@ -59,6 +61,21 @@ pub fn project(props: &ProjectProps) -> Html {
                 }
             });
         }
+    };
+
+    let handle_task_edit = {
+        let editing = editing.clone();
+        Callback::from(move |to_edit: Task| {
+            editing.set(Some(to_edit));
+        })
+    };
+
+    let handle_task_edited = {
+        let editing = editing.clone();
+        Callback::from(move |edited: Task| {
+            log::info!("Task {edited:?} edited. TODO: save");
+            editing.set(None);
+        })
     };
 
     let handle_task_update = {
@@ -207,6 +224,7 @@ pub fn project(props: &ProjectProps) -> Html {
                 onchange={move |_| show_completed.set(!*show_completed)}
             />
         </div>
+        <EditTask data={(*editing).clone()} on_err={&props.set_err} on_submit={&handle_task_edited}/>
         {status_text}
         {task_list}
         <button class="bg-danger" onclick={handle_project_delete}>{ "delete project" } </button>
@@ -247,16 +265,10 @@ async fn delete_project(id: &Uuid) -> Result<(), anyhow::Error> {
 async fn add_task(project_id: &Uuid) -> Result<Task, anyhow::Error> {
     let title = prompt("Enter task name", None).ok_or_else(|| anyhow!("No task name specified"))?;
 
-    let estimate = match prompt("Enter estimate", None) {
-        Some(est) if est.is_empty() => None,
-        Some(est) => Some(est.parse::<u8>()?),
-        None => None,
-    };
-
     let command = CreateTaskCommand {
         project_id: *project_id,
         title,
-        estimate,
+        estimate: None,
     };
 
     let client = reqwest::Client::new();

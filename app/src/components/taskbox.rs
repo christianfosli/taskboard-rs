@@ -1,10 +1,10 @@
-use gloo_dialogs::prompt;
 use taskboard_core_lib::{Status, Task};
 use yew::prelude::*;
 
 #[derive(Clone, PartialEq, Properties)]
 pub struct TaskBoxProps {
     pub onchange: Callback<Task>,
+    pub on_edit: Callback<Task>,
     pub on_err: Callback<Option<String>>,
     pub data: Task,
 }
@@ -35,38 +35,10 @@ pub fn taskbox(props: &TaskBoxProps) -> Html {
         }
     };
 
-    let handle_title_change = {
-        let onchange = props.onchange.clone();
-        let data = props.data.clone();
-
-        move |_| {
-            if let Some(title) = prompt("Enter task name", None) {
-                onchange.emit(Task { title, ..data });
-            } else {
-                log::warn!("Not changing title. Operation canceled");
-            }
-        }
-    };
-
-    let handle_rem_change = {
-        let onchange = props.onchange.clone();
-        let on_err = props.on_err.clone();
-        let data = props.data.clone();
-        move |_| {
-            if let Some(rem) = prompt("Enter remaining work", None) {
-                let rem = rem.parse::<u8>();
-                match rem {
-                    Ok(rem) => onchange.emit(Task {
-                        remaining_work: Some(rem),
-                        ..data.clone()
-                    }),
-                    Err(e) => {
-                        log::error!("Error changing rem: {}", e);
-                        on_err.emit(Some(format!("Could not update rem due to: {}", e)));
-                    }
-                }
-            }
-        }
+    let handle_edit = {
+        let on_edit = props.on_edit.clone();
+        let task = props.data.clone();
+        Callback::from(move |_| on_edit.emit(task.clone()))
     };
 
     let action = {
@@ -95,8 +67,7 @@ pub fn taskbox(props: &TaskBoxProps) -> Html {
             <p class="status">{ format!("status: {:?}", props.data.status) }</p>
             <p>{rem_work}  </p>
             <div>
-                <button onclick={handle_title_change}>{ "Edit title" }</button>
-                <button disabled={props.data.status==Status::Done} onclick={handle_rem_change}>{ "Update rem" }</button>
+                <button onclick={&handle_edit}>{ "Edit" }</button>
             </div>
             <div>
                 {action}

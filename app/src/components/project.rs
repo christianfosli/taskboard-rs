@@ -70,14 +70,6 @@ pub fn project(props: &ProjectProps) -> Html {
         })
     };
 
-    let handle_task_edited = {
-        let editing = editing.clone();
-        Callback::from(move |edited: Task| {
-            log::info!("Task {edited:?} edited. TODO: save");
-            editing.set(None);
-        })
-    };
-
     let handle_task_update = {
         let project_id = props.id;
         let tasks = tasks.clone();
@@ -150,7 +142,7 @@ pub fn project(props: &ProjectProps) -> Html {
     let task_list = {
         let to_taskbox = |t: Task| {
             html! {
-                <TaskBox onchange={&handle_task_update} on_err={&props.set_err} data={t} />
+                <TaskBox onchange={&handle_task_update} on_edit={&handle_task_edit} on_err={&props.set_err} data={t} />
             }
         };
 
@@ -224,7 +216,7 @@ pub fn project(props: &ProjectProps) -> Html {
                 onchange={move |_| show_completed.set(!*show_completed)}
             />
         </div>
-        <EditTask data={(*editing).clone()} on_err={&props.set_err} on_submit={&handle_task_edited}/>
+        <EditTask data={(*editing).clone()} on_err={&props.set_err} on_submit={&handle_task_update}/>
         {status_text}
         {task_list}
         <button class="bg-danger" onclick={handle_project_delete}>{ "delete project" } </button>

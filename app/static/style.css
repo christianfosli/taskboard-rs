@@ -26,6 +26,19 @@ button {
   color: blue;
 }
 
+dialog {
+  background-color: yellow;
+}
+
+dialog input {
+  display: block;
+}
+
+dialog::backdrop {
+  background: rgba(255,0,0,.25);
+  backdrop-filter: blur(0.5rem);
+}
+
 .error {
   background-color: red;
   padding: 0.5rem;

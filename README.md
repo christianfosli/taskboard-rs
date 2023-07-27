@@ -1,5 +1,17 @@
 # Taskboard
 
+---
+
+## :warning: Obsolete :warning:
+
+I used this project to learn about Rust and Kubernetes,
+but I have (per 2023) not been updating it in a while,
+so many of the tools are now out of date or no longer best-practice.
+I have decomissioned the related cloud resources for running this page (meaning the URL's no longer work)
+and archived the git repository for now.
+
+---
+
 ![app](https://github.com/christianfosli/taskboard-rs/workflows/app/badge.svg)
 ![task-service](https://github.com/christianfosli/taskboard-rs/workflows/task-service/badge.svg)
 ![project-service](https://github.com/christianfosli/taskboard-rs/workflows/project-service/badge.svg)
